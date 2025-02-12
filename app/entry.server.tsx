@@ -4,11 +4,11 @@ import { Layout } from "./root";
 import { Outlet } from "react-router";
 import { renderToString } from "react-dom/server";
 
-const app = express();
+const server = express();
 
-app.use(express.static("build/client"));
+server.use(express.static("build/client"));
 
-app.get("/health", (req, res) => {
+server.get("/health", (req, res) => {
   res.send("OK");
 });
 
@@ -54,6 +54,6 @@ const handler = createRequestHandler({
   },
 }),
 
-app.all("*", handler);
+server.all("*", handler);
 
-app.listen(3000);
+server.listen(3000);
