@@ -1,9 +1,8 @@
-import express from 'express';
-import { createRequestHandler } from '@react-router/express';
-import { Layout } from './root';
-import React from 'react';
-import { Outlet } from 'react-router';
-import { renderToString } from 'react-dom/server';
+import express from "express";
+import { createRequestHandler } from "@react-router/express";
+import { Layout } from "./root";
+import { Outlet } from "react-router";
+import { renderToString } from "react-dom/server";
 import type { ServerBuild } from 'react-router';
 import Home from './routes/home';
 
