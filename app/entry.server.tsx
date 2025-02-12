@@ -51,7 +51,7 @@ const handler = createRequestHandler({
       url: "/",
       version: "1",
     },
-  }
+  },
 });
 
 app.all("*", handler);
