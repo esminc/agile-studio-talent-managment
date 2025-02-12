@@ -24,8 +24,8 @@ const handler = createRequestHandler({
               <Outlet />
             </Layout>
           ),
-        }
-      }
+        },
+      },
     },
     publicPath: "/",
     assetsBuildDirectory: "public",
@@ -42,15 +42,15 @@ const handler = createRequestHandler({
                 </Layout>,
               ),
           );
-        }
-      }
+        },
+      },
     },
     assets: {
       entry: { module: "/entry.client.js", imports: [] },
       routes: {},
       url: "/",
       version: "1",
-    }
+    },
   }
 });
 
