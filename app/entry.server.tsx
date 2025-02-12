@@ -52,7 +52,7 @@ const handler = createRequestHandler({
       version: "1",
     },
   },
-});
+}),
 
 app.all("*", handler);
 
