@@ -3,23 +3,21 @@ import { createRequestHandler } from "@react-router/express";
 import { Layout } from "./root";
 import { Outlet } from "react-router";
 import { renderToString } from "react-dom/server";
-import type { ServerBuild } from 'react-router';
-import Home from './routes/home';
 
 const app = express();
 
-app.use(express.static('build/client'));
+app.use(express.static("build/client"));
 
-app.get('/health', (req, res) => {
-  res.send('OK');
+app.get("/health", (req, res) => {
+  res.send("OK");
 });
 
 const handler = createRequestHandler({
   build: {
     routes: {
-      '/': {
-        id: '/',
-        path: '/',
+      "/": {
+        id: "/",
+        path: "/",
         module: {
           default: () => <Layout><Outlet /></Layout>
         }
