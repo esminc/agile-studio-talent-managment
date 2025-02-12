@@ -19,7 +19,11 @@ const handler = createRequestHandler({
         id: "/",
         path: "/",
         module: {
-          default: () => <Layout><Outlet /></Layout>
+          default: () => (
+            <Layout>
+              <Outlet />
+            </Layout>
+          ),
         }
       }
     },
@@ -29,14 +33,14 @@ const handler = createRequestHandler({
     isSpaMode: false,
     entry: {
       module: {
-        default: async (request: Request) => {
+        default: async () => {
           return new Response(
-            '<!DOCTYPE html>' +
-            renderToString(
-              <Layout>
-                <Outlet />
-              </Layout>
-            )
+            "<!DOCTYPE html>" +
+              renderToString(
+                <Layout>
+                  <Outlet />
+                </Layout>,
+              ),
           );
         }
       }
@@ -45,11 +49,11 @@ const handler = createRequestHandler({
       entry: { module: "/entry.client.js", imports: [] },
       routes: {},
       url: "/",
-      version: "1"
+      version: "1",
     }
   }
 });
 
-app.all('*', handler);
+app.all("*", handler);
 
 app.listen(3000);
