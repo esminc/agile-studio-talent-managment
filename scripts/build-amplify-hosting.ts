@@ -1,4 +1,6 @@
 import * as fsp from "node:fs/promises";
+import * as child_process from "node:child_process";
+import * as util from "node:util";
 
 async function copyComputeFiles() {
   await Promise.all([
@@ -6,10 +8,19 @@ async function copyComputeFiles() {
     fsp.cp("build/server", ".amplify-hosting/compute/default/build/server", {
       recursive: true,
     }),
-    fsp.cp("node_modules", ".amplify-hosting/compute/default/node_modules", {
-      recursive: true,
-    }),
+    fsp.cp("package.json", "./.amplify-hosting/compute/default/package.json"),
+    fsp.cp(
+      "package-lock.json",
+      "./.amplify-hosting/compute/default/package-lock.json",
+    ),
+    installDependencies(),
   ]);
+}
+
+async function installDependencies() {
+  await util.promisify(child_process.exec)("npm ci --omit=dev", {
+    cwd: "./.amplify-hosting/compute/default",
+  });
 }
 
 async function copyStaticFiles() {
