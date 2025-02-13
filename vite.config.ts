@@ -6,7 +6,7 @@ import pkg from "./package.json";
 
 export default defineConfig({
   ssr: {
-    noExternal: /^\@radix-ui/,
+    noExternal: Object.keys(pkg.dependencies),
   },
   plugins: [
     tailwindcss(),
