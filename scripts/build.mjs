@@ -4,10 +4,10 @@ await esbuild.build({
   bundle: true,
   entryPoints: ["./server.js"],
   outdir: "./.amplify-hosting/compute/default",
-  // outExtension: {
-  //   // 必須では無いが、ESM形式で出力されることを明示的にするため拡張子を.mjsにしている
-  //   ".js": ".mjs",
-  // },
+  outExtension: {
+    // 必須では無いが、ESM形式で出力されることを明示的にするため拡張子を.mjsにしている
+    ".js": ".mjs",
+  },
   platform: "node", // nodejsで実行するため必要
   format: "esm", // ESMプロジェクトなので、出力フォーマットを'esm'に設定する必要
   banner: {
