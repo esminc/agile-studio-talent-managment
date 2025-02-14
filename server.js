@@ -11,7 +11,7 @@ app.use(compression());
 app.use(express.static("build/client"));
 app.use(morgan("tiny"));
 
-app.all("*", createRequestHandler({ build: build }));
+app.all("*", createRequestHandler({ build }));
 
 app.listen(3000, () => {
   console.log("App listening on http://localhost:3000");
