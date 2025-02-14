@@ -4,12 +4,17 @@ import * as util from "node:util";
 
 async function copyComputeFiles() {
   await Promise.all([
-    fsp.cp("server.js", "./.amplify-hosting/compute/default/server.js"),
-    fsp.cp("build/server", ".amplify-hosting/compute/default/build/server", {
-      recursive: true,
-    }),
-    installDependencies(),
+    //fsp.cp("server.js", "./.amplify-hosting/compute/default/server.js"),
+    // fsp.cp("build/server", ".amplify-hosting/compute/default/build/server", {
+    //recursive: true,
+    //}),
+    buildServer(),
+    //installDependencies(),
   ]);
+}
+
+async function buildServer() {
+  await util.promisify(child_process.exec)("node scripts/build.mjs");
 }
 
 async function installDependencies() {
