@@ -12,9 +12,25 @@ const schema = a.schema({
       content: a.string(),
     })
     .authorization((allow) => [allow.guest()]),
+    
+  Account: a
+    .model({
+      name: a.string().required(),
+      photo: a.string(), // URL to photo
+      organizationLine: a.string().required(),
+      residence: a.string().required(),
+    })
+    .authorization((allow) => [
+      // Temporarily allow authenticated users full access
+      // Will be refined when implementing relationships
+      allow.authenticated(),
+    ]),
 });
 
 export type Schema = ClientSchema<typeof schema>;
+
+// Export Account type for frontend use
+export type Account = Schema['Account'];
 
 export const data = defineData({
   schema,
