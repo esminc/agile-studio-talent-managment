@@ -19,18 +19,68 @@ const schema = a.schema({
       photo: a.string(), // URL to photo
       organizationLine: a.string().required(),
       residence: a.string().required(),
+      assignments: a.hasMany('ProjectAssignment', 'accountId'),
     })
     .authorization((allow) => [
-      // Temporarily allow authenticated users full access
-      // Will be refined when implementing relationships
-      allow.authenticated(),
+      allow.authenticated().to(['read']),
+      allow.owner().to(['create', 'update', 'delete']),
+      allow.group('Admin').to(['create', 'update', 'delete']),
     ]),
+
+  Project: a
+    .model({
+      name: a.string().required(),
+      clientName: a.string().required(),
+      overview: a.string().required(),
+      startDate: a.date().required(),
+      endDate: a.date().required(),
+      assignments: a.hasMany('ProjectAssignment', 'projectId'),
+      technologies: a.hasMany('ProjectTechnologyLink', 'projectId'),
+    })
+    .authorization((allow) => [
+      allow.authenticated().to(['read']),
+      allow.group('Admin').to(['create', 'update', 'delete']),
+    ]),
+
+  ProjectTechnology: a
+    .model({
+      name: a.string().required(),
+      projects: a.hasMany('ProjectTechnologyLink', 'technologyId'),
+    })
+    .authorization((allow) => [allow.authenticated()]),
+
+  ProjectAssignment: a
+    .model({
+      projectId: a.id().required(),
+      accountId: a.id().required(),
+      startDate: a.date().required(),
+      endDate: a.date().required(),
+      project: a.belongsTo('Project', 'projectId'),
+      account: a.belongsTo('Account', 'accountId'),
+    })
+    .authorization((allow) => [
+      allow.authenticated().to(['read']),
+      allow.group('Admin').to(['create', 'update', 'delete']),
+    ]),
+
+  ProjectTechnologyLink: a
+    .model({
+      projectId: a.id().required(),
+      technologyId: a.id().required(),
+      project: a.belongsTo('Project', 'projectId'),
+      technology: a.belongsTo('ProjectTechnology', 'technologyId'),
+    })
+    .authorization((allow) => [allow.authenticated()]),
 });
 
 export type Schema = ClientSchema<typeof schema>;
 
-// Export Account type for frontend use
+// Export types for frontend use
 export type Account = Schema['Account'];
+export type Project = Schema['Project'];
+export type ProjectTechnology = Schema['ProjectTechnology'];
+export type ProjectAssignment = Schema['ProjectAssignment'];
+export type ProjectTechnologyLink = Schema['ProjectTechnologyLink'];
 
 export const data = defineData({
   schema,
