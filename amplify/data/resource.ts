@@ -21,7 +21,11 @@ const schema = a.schema({
       residence: a.string().required(),
       assignments: a.hasMany('ProjectAssignment', 'accountId'),
     })
-    .authorization((allow) => [allow.authenticated()]),
+    .authorization((allow) => [
+      allow.authenticated().to(['read']),
+      allow.owner().to(['create', 'update', 'delete']),
+      allow.group('Admin').to(['create', 'update', 'delete']),
+    ]),
 
   Project: a
     .model({
@@ -35,7 +39,7 @@ const schema = a.schema({
     })
     .authorization((allow) => [
       allow.authenticated().to(['read']),
-      allow.owner().to(['create', 'update', 'delete']),
+      allow.group('Admin').to(['create', 'update', 'delete']),
     ]),
 
   ProjectTechnology: a
@@ -45,7 +49,7 @@ const schema = a.schema({
     })
     .authorization((allow) => [allow.authenticated()]),
 
-  ProjectAssignment: a
+  ProjectAssignment:a
     .model({
       projectId: a.id().required(),
       accountId: a.id().required(),
@@ -56,7 +60,7 @@ const schema = a.schema({
     })
     .authorization((allow) => [
       allow.authenticated().to(['read']),
-      allow.owner().to(['create', 'update', 'delete']),
+      allow.group('Admin').to(['create', 'update', 'delete']),
     ]),
 
   ProjectTechnologyLink: a
