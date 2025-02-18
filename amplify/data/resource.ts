@@ -49,7 +49,7 @@ const schema = a.schema({
     })
     .authorization((allow) => [allow.authenticated()]),
 
-  ProjectAssignment:a
+  ProjectAssignment: a
     .model({
       projectId: a.id().required(),
       accountId: a.id().required(),
