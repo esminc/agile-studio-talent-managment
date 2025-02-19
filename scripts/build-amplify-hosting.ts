@@ -20,11 +20,11 @@ async function buildServer() {
 async function installDependencies() {
   await fsp.cp(
     "package.json",
-    "./.amplify-hosting/compute/default/package.json"
+    "./.amplify-hosting/compute/default/package.json",
   );
   await fsp.cp(
     "package-lock.json",
-    "./.amplify-hosting/compute/default/package-lock.json"
+    "./.amplify-hosting/compute/default/package-lock.json",
   );
   await util.promisify(child_process.exec)("npm ci --omit=dev", {
     cwd: "./.amplify-hosting/compute/default",
