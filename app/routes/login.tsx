@@ -1,7 +1,6 @@
-// Removed unused React import
-import { Authenticator } from "@aws-amplify/ui-react";
+import { Authenticator, useAuthenticator } from "@aws-amplify/ui-react";
 import "@aws-amplify/ui-react/styles.css";
-import { Button } from "../components/ui/button";
+import { Navigate } from "react-router";
 
 export function meta() {
   return [
@@ -11,17 +10,16 @@ export function meta() {
 }
 
 export default function Login() {
+  const { authStatus } = useAuthenticator((context) => [context.authStatus]);
+
+  if (authStatus === "authenticated") {
+    return <Navigate to="/" replace />;
+  }
+
   return (
     <div className="flex min-h-screen items-center justify-center p-4">
       <div className="w-full max-w-sm">
-        <Authenticator>
-          {({ signOut }) => (
-            <div className="text-center">
-              <p className="mb-4">Successfully logged in!</p>
-              <Button onClick={signOut}>Sign Out</Button>
-            </div>
-          )}
-        </Authenticator>
+        <Authenticator />
       </div>
     </div>
   );

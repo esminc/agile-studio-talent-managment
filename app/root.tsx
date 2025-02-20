@@ -12,10 +12,9 @@ import {
   ScrollRestoration,
 } from "react-router";
 import type { Route } from "../.react-router/types/app/+types/root";
-import { ThemeProvider } from "@aws-amplify/ui-react";
+import { Authenticator, ThemeProvider, useAuthenticator } from "@aws-amplify/ui-react";
 import "@aws-amplify/ui-react/styles.css";
-import { SidebarProvider, SidebarTrigger } from "./components/ui/sidebar";
-import { AppSidebar } from "./components/app-sidebar";
+import { ProtectedLayout } from "./components/protected-layout";
 import "./app.css";
 
 export const links: Route.LinksFunction = () => [
@@ -41,15 +40,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
       </head>
       <body>
-        <ThemeProvider>
-          <SidebarProvider>
-            <AppSidebar />
-            <main>
-              <SidebarTrigger />
-              {children}
-            </main>
-          </SidebarProvider>
-        </ThemeProvider>
+        <Authenticator.Provider>
+          <ThemeProvider>
+            {children}
+          </ThemeProvider>
+        </Authenticator.Provider>
         <ScrollRestoration />
         <Scripts />
       </body>
@@ -58,7 +53,16 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-  return <Outlet />;
+  const { authStatus } = useAuthenticator((context) => [context.authStatus]);
+  if (authStatus !== "authenticated") {
+    return <Outlet />;
+  }
+
+  return (
+    <ProtectedLayout>
+      <Outlet />
+    </ProtectedLayout>
+  );
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
