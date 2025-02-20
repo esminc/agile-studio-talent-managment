@@ -12,7 +12,11 @@ import {
   ScrollRestoration,
 } from "react-router";
 import type { Route } from "../.react-router/types/app/+types/root";
-import { Authenticator, ThemeProvider, useAuthenticator } from "@aws-amplify/ui-react";
+import {
+  Authenticator,
+  ThemeProvider,
+  useAuthenticator,
+} from "@aws-amplify/ui-react";
 import "@aws-amplify/ui-react/styles.css";
 import { ProtectedLayout } from "./components/protected-layout";
 import "./app.css";
@@ -41,9 +45,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </head>
       <body>
         <Authenticator.Provider>
-          <ThemeProvider>
-            {children}
-          </ThemeProvider>
+          <ThemeProvider>{children}</ThemeProvider>
         </Authenticator.Provider>
         <ScrollRestoration />
         <Scripts />
