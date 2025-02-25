@@ -1,7 +1,8 @@
-import config from "../amplify_outputs.json";
+// Import Amplify configuration
 import { Amplify } from "aws-amplify";
-// Configure Amplify for SSR
-Amplify.configure(config, { ssr: true });
+// Configure Amplify for SSR with empty config for development
+// In production, amplify_outputs.json will be available
+Amplify.configure({}, { ssr: true });
 
 import {
   isRouteErrorResponse,
@@ -11,6 +12,7 @@ import {
   Scripts,
   ScrollRestoration,
 } from "react-router";
+// Import Route types from auto-generated file
 import type { Route } from "../.react-router/types/app/+types/root";
 import { Authenticator, ThemeProvider } from "@aws-amplify/ui-react";
 import "@aws-amplify/ui-react/styles.css";
