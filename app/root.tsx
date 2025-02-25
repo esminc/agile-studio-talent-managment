@@ -1,3 +1,8 @@
+import config from "../amplify_outputs.json";
+import { Amplify } from "aws-amplify";
+// Configure Amplify for SSR
+Amplify.configure(config, { ssr: true });
+
 import {
   isRouteErrorResponse,
   Links,
@@ -6,11 +11,11 @@ import {
   Scripts,
   ScrollRestoration,
 } from "react-router";
-
-import type { Route } from "./+types/root";
+import type { Route } from "../.react-router/types/app/+types/root";
+import { Authenticator, ThemeProvider } from "@aws-amplify/ui-react";
+import "@aws-amplify/ui-react/styles.css";
+import { ProtectedLayout } from "./components/protected-layout";
 import "./app.css";
-import { SidebarProvider, SidebarTrigger } from "./components/ui/sidebar";
-import { AppSidebar } from "./components/app-sidebar";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -35,13 +40,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
       </head>
       <body>
-        <SidebarProvider>
-          <AppSidebar />
-          <main>
-            <SidebarTrigger />
-            {children}
-          </main>
-        </SidebarProvider>
+        <Authenticator.Provider>
+          <ThemeProvider>{children}</ThemeProvider>
+        </Authenticator.Provider>
         <ScrollRestoration />
         <Scripts />
       </body>
@@ -50,7 +51,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-  return <Outlet />;
+  return (
+    <ProtectedLayout>
+      <Outlet />
+    </ProtectedLayout>
+  );
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
