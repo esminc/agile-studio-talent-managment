@@ -55,11 +55,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-  const { authStatus } = useAuthenticator((context) => [context.authStatus]);
-  if (authStatus !== "authenticated") {
-    return <Outlet />;
-  }
-
   return (
     <ProtectedLayout>
       <Outlet />
