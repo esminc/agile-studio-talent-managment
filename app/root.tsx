@@ -1,7 +1,19 @@
-import config from "../amplify_outputs.json";
 import { Amplify } from "aws-amplify";
+import config from "./amplify_outputs.json";
 // Configure Amplify for SSR
-Amplify.configure(config, { ssr: true });
+// Configure Amplify for SSR with minimal configuration
+Amplify.configure(
+  {
+    Auth: {
+      Cognito: {
+        userPoolId: config.auth.userPoolId,
+        userPoolClientId: config.auth.userPoolClientId,
+        identityPoolId: config.auth.identityPoolId,
+      },
+    },
+  },
+  { ssr: true },
+);
 
 import {
   isRouteErrorResponse,
@@ -11,13 +23,20 @@ import {
   Scripts,
   ScrollRestoration,
 } from "react-router";
-import type { Route } from "../.react-router/types/app/+types/root";
+// Type definitions for Route functions
+type LinksFunction = () => Array<{
+  rel: string;
+  href: string;
+  crossOrigin?: string;
+}>;
+type LoaderFunction = (args: { request: Request }) => Promise<unknown>;
+type ErrorBoundaryProps = { error: unknown };
 import { Authenticator, ThemeProvider } from "@aws-amplify/ui-react";
 import "@aws-amplify/ui-react/styles.css";
 import { ProtectedLayout } from "./components/protected-layout";
 import "./app.css";
 
-export const links: Route.LinksFunction = () => [
+export const links: LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
   {
     rel: "preconnect",
@@ -29,6 +48,25 @@ export const links: Route.LinksFunction = () => [
     href: "https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap",
   },
 ];
+
+export const loader: LoaderFunction = async ({ request }) => {
+  const url = new URL(request.url);
+  const pathname = url.pathname;
+
+  // Skip authentication check for login page
+  if (pathname === "/login") {
+    return { user: null };
+  }
+
+  try {
+    const { getCurrentUser } = await import("./utils/auth.server");
+    const user = await getCurrentUser();
+    return { user };
+  } catch (error) {
+    console.error("Error getting current user:", error);
+    return { user: null };
+  }
+};
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
@@ -58,7 +96,7 @@ export default function App() {
   );
 }
 
-export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
+export function ErrorBoundary({ error }: ErrorBoundaryProps) {
   let message = "Oops!";
   let details = "An unexpected error occurred.";
   let stack: string | undefined;
