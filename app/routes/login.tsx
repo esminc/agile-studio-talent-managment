@@ -36,7 +36,9 @@ export const action = async ({ request }: { request: Request }) => {
     );
   } catch (error) {
     console.error("Login error:", error);
-    return { error: error instanceof Error ? error.message : "Failed to login" };
+    return {
+      error: error instanceof Error ? error.message : "Failed to login",
+    };
   }
 };
 
