@@ -4,9 +4,8 @@
   "type": "module",
   "scripts": {
     "build": "react-router build",
-    "postbuild": "tsx scripts/build-amplify-hosting.ts",
     "dev": "react-router dev",
-    "start": "react-router-serve ./build/server/index.js",
+    "start": "node ./build/server/server.mjs",
     "typecheck": "react-router typegen && tsc",
     "lint": "eslint app",
     "format": "prettier . --write",
@@ -31,7 +30,8 @@
     "react-dom": "^19.0.0",
     "react-router": "^7.1.5",
     "tailwind-merge": "^3.0.1",
-    "tailwindcss-animate": "^1.0.7"
+    "tailwindcss-animate": "^1.0.7",
+    "vite-plugin-react-router-amplify-hosting": "^0.1.1"
   },
   "devDependencies": {
     "@aws-amplify/backend": "^1.14.0",
