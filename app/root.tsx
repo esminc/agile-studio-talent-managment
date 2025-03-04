@@ -13,8 +13,20 @@ import "@aws-amplify/ui-react/styles.css";
 import { ProtectedLayout } from "./components/protected-layout";
 import "./app.css";
 
+// Import the original config if it exists, otherwise use an empty object
+// This will be properly configured during deployment
+let config = {};
+try {
+  // Try to import the config file, but don't fail if it doesn't exist
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  config = require("../amplify_outputs.json");
+} catch (e) {
+  // If the file doesn't exist, use an empty object
+  console.warn("amplify_outputs.json not found, using empty config");
+}
+
 // Configure Amplify for SPA
-Amplify.configure({}, { ssr: false });
+Amplify.configure(config, { ssr: false });
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
