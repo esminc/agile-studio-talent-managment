@@ -1,7 +1,6 @@
-import config from "../amplify_outputs.json";
 import { Amplify } from "aws-amplify";
-// Configure Amplify for SSR
-Amplify.configure(config, { ssr: true });
+// Configure Amplify for SPA
+Amplify.configure({}, { ssr: false });
 
 import {
   isRouteErrorResponse,
