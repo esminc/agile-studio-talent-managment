@@ -6,27 +6,17 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
+  useNavigate,
 } from "react-router";
 import type { Route } from "../.react-router/types/app/+types/root";
 import { Authenticator, ThemeProvider } from "@aws-amplify/ui-react";
 import "@aws-amplify/ui-react/styles.css";
-import { ProtectedLayout } from "./components/protected-layout";
 import "./app.css";
+import config from "../amplify_outputs.json";
+import { Hub } from "aws-amplify/utils";
+import { useEffect } from "react";
 
-// Use an empty config object for SPA mode
-// This will be properly configured during deployment
-const config = {
-  // Minimum configuration needed for Amplify to work in SPA mode
-  Auth: {
-    // These values will be overridden by the actual configuration during deployment
-    region: "ap-northeast-1",
-    userPoolId: "dummy-user-pool-id",
-    userPoolWebClientId: "dummy-client-id",
-  },
-};
-
-// Configure Amplify for SPA
-Amplify.configure(config, { ssr: false });
+Amplify.configure(config);
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -62,11 +52,16 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-  return (
-    <ProtectedLayout>
-      <Outlet />
-    </ProtectedLayout>
-  );
+  const navigate = useNavigate();
+  useEffect(() => {
+    Hub.listen("auth", (data) => {
+      const { payload } = data;
+      if (payload.event === "signedIn") {
+        navigate("/");
+      }
+    });
+  }, []);
+  return <Outlet />;
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
