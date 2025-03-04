@@ -13,17 +13,17 @@ import "@aws-amplify/ui-react/styles.css";
 import { ProtectedLayout } from "./components/protected-layout";
 import "./app.css";
 
-// Import the original config if it exists, otherwise use an empty object
+// Use an empty config object for SPA mode
 // This will be properly configured during deployment
-let config = {};
-try {
-  // Try to import the config file, but don't fail if it doesn't exist
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  config = require("../amplify_outputs.json");
-} catch (e) {
-  // If the file doesn't exist, use an empty object
-  console.warn("amplify_outputs.json not found, using empty config");
-}
+const config = {
+  // Minimum configuration needed for Amplify to work in SPA mode
+  Auth: {
+    // These values will be overridden by the actual configuration during deployment
+    region: "ap-northeast-1",
+    userPoolId: "dummy-user-pool-id",
+    userPoolWebClientId: "dummy-client-id",
+  },
+};
 
 // Configure Amplify for SPA
 Amplify.configure(config, { ssr: false });
