@@ -1,7 +1,4 @@
 import { Amplify } from "aws-amplify";
-// Configure Amplify for SPA
-Amplify.configure({}, { ssr: false });
-
 import {
   isRouteErrorResponse,
   Links,
@@ -15,6 +12,9 @@ import { Authenticator, ThemeProvider } from "@aws-amplify/ui-react";
 import "@aws-amplify/ui-react/styles.css";
 import { ProtectedLayout } from "./components/protected-layout";
 import "./app.css";
+
+// Configure Amplify for SPA
+Amplify.configure({}, { ssr: false });
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
