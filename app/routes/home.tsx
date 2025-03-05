@@ -1,7 +1,9 @@
-import type { Route } from "./+types/home";
+import { Button } from "~/components/ui/button";
 import { Welcome } from "../welcome/welcome";
+import { signOut } from "aws-amplify/auth";
+import { useNavigate } from "react-router";
 
-export function meta({}: Route.MetaArgs) {
+export function meta() {
   return [
     { title: "New React Router App" },
     { name: "description", content: "Welcome to React Router!" },
@@ -9,5 +11,16 @@ export function meta({}: Route.MetaArgs) {
 }
 
 export default function Home() {
-  return <Welcome />;
+  const navigate = useNavigate();
+  const logout = async () => {
+    console.log("Logging out...");
+    await signOut();
+    navigate("/login");
+  };
+  return (
+    <>
+      <Welcome />
+      <Button onClick={logout}>Logout</Button>
+    </>
+  );
 }
