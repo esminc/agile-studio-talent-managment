@@ -1,17 +1,10 @@
 // No need to import React with modern JSX transform
 import { useState, useEffect } from "react";
 import { generateClient } from "aws-amplify/data";
+import { type Schema } from "../../amplify/data/resource";
 import { Button } from "../components/ui/button";
 import { AccountCard } from "../components/account-card";
 import { AccountForm } from "../components/account-form";
-
-interface Account {
-  id?: string;
-  name: string;
-  photo?: string;
-  organizationLine: string;
-  residence: string;
-}
 
 export function meta() {
   return [
@@ -21,27 +14,17 @@ export function meta() {
 }
 
 export default function Accounts() {
-  const [accounts, setAccounts] = useState<Account[]>([]);
+  const [accounts, setAccounts] = useState<Schema["Account"][]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const [showForm, setShowForm] = useState(false);
 
-  const client = generateClient();
+  const client = generateClient<Schema>();
 
   const fetchAccounts = async () => {
     try {
       setLoading(true);
-      // Cast the client to a more specific type
-      // First cast to unknown, then to the specific type
-      const { data } = await (
-        client as unknown as {
-          models: {
-            Account: {
-              list: () => Promise<{ data: Account[] }>;
-            };
-          };
-        }
-      ).models.Account.list();
+      const { data } = await client.models.Account.list();
       setAccounts(data);
       setError(null);
     } catch (err) {

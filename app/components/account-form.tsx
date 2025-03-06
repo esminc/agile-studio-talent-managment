@@ -3,14 +3,7 @@ import { useState } from "react";
 import { generateClient } from "aws-amplify/data";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
-
-interface Account {
-  id?: string;
-  name: string;
-  photo?: string;
-  organizationLine: string;
-  residence: string;
-}
+import { type Schema } from "../../amplify/data/resource";
 
 interface AccountFormProps {
   onAccountCreated: () => void;
@@ -27,22 +20,7 @@ export function AccountForm({ onAccountCreated, onCancel }: AccountFormProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
-  const client = generateClient();
-
-  // Define a more specific return type for the createAccount function
-  const createAccount = async (data: Omit<Account, "id">): Promise<Account> => {
-    // We need to cast the client to access the models property
-    // First cast to unknown, then to the specific type
-    return (
-      client as unknown as {
-        models: {
-          Account: {
-            create: (data: Omit<Account, "id">) => Promise<Account>;
-          };
-        };
-      }
-    ).models.Account.create(data);
-  };
+  const client = generateClient<Schema>();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -61,7 +39,7 @@ export function AccountForm({ onAccountCreated, onCancel }: AccountFormProps) {
 
     try {
       setLoading(true);
-      await createAccount({
+      await client.models.Account.create({
         name: formData.name,
         photo: formData.photo || undefined,
         organizationLine: formData.organizationLine,
