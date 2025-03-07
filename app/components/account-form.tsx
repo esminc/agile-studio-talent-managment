@@ -1,9 +1,8 @@
 import * as React from "react";
 import { useState } from "react";
-import { generateClient } from "aws-amplify/data";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
-import { type Schema } from "../../amplify/data/resource";
+import { client } from "~/lib/amplify-client";
 
 interface AccountFormProps {
   onAccountCreated: () => void;
@@ -19,8 +18,6 @@ export function AccountForm({ onAccountCreated, onCancel }: AccountFormProps) {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
-
-  const client = generateClient<Schema>();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;

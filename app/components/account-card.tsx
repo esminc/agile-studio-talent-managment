@@ -1,9 +1,11 @@
 // No need to import React with modern JSX transform
-import { type Schema } from "../../amplify/data/resource";
+import type { Schema } from "../../amplify/data/resource";
 
 interface AccountCardProps {
-  account: Schema["Account"];
+  account: Account;
 }
+
+type Account = Schema["Account"]["type"];
 
 export function AccountCard({ account }: AccountCardProps) {
   return (

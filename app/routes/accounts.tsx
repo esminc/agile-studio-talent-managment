@@ -1,10 +1,10 @@
 // No need to import React with modern JSX transform
 import { useState, useEffect } from "react";
-import { generateClient } from "aws-amplify/data";
-import { type Schema } from "../../amplify/data/resource";
+import type { Schema } from "../../amplify/data/resource";
 import { Button } from "../components/ui/button";
 import { AccountCard } from "../components/account-card";
 import { AccountForm } from "../components/account-form";
+import { client } from "../lib/amplify-client";
 
 export function meta() {
   return [
@@ -13,20 +13,18 @@ export function meta() {
   ];
 }
 
+type Account = Schema["Account"]["type"];
+
 export default function Accounts() {
-  const [accounts, setAccounts] = useState<Schema["Account"][]>([]);
+  const [accounts, setAccounts] = useState<Account[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const [showForm, setShowForm] = useState(false);
-
-  const client = generateClient<Schema>();
-
   const fetchAccounts = async () => {
     try {
       setLoading(true);
       const { data } = await client.models.Account.list();
       setAccounts(data);
-      setError(null);
     } catch (err) {
       console.error("Error fetching accounts:", err);
       setError(
@@ -66,7 +64,7 @@ export default function Accounts() {
 
       {error && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-          Error: {error.message}
+          Error: {error.toString()}
         </div>
       )}
 
