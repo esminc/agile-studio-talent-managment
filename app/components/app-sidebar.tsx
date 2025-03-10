@@ -1,4 +1,4 @@
-import { Home, Settings, Users } from "lucide-react";
+import { Home, Settings, Users, Briefcase } from "lucide-react";
 import { Link } from "react-router";
 
 import {
@@ -23,6 +23,11 @@ const items = [
     title: "Accounts",
     url: "/accounts",
     icon: Users,
+  },
+  {
+    title: "Projects",
+    url: "/projects",
+    icon: Briefcase,
   },
   {
     title: "Settings",

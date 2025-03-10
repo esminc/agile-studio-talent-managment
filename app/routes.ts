@@ -10,5 +10,6 @@ export default [
   layout("./routes/protected/layout.tsx", [
     index("routes/home.tsx"),
     route("accounts", "routes/accounts.tsx"),
+    route("projects", "routes/projects.tsx"),
   ]),
 ] satisfies RouteConfig;
