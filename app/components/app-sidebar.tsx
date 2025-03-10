@@ -1,4 +1,5 @@
-import { Home, Settings } from "lucide-react";
+import { Home, Settings, Users } from "lucide-react";
+import { Link } from "react-router";
 
 import {
   Sidebar,
@@ -15,8 +16,13 @@ import {
 const items = [
   {
     title: "Home",
-    url: "#",
+    url: "/",
     icon: Home,
+  },
+  {
+    title: "Accounts",
+    url: "/accounts",
+    icon: Users,
   },
   {
     title: "Settings",
@@ -36,10 +42,14 @@ export function AppSidebar() {
               {items.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
-                    <a href={item.url}>
+                    <Link to={item.url}>
                       <item.icon />
                       <span>{item.title}</span>
-                    </a>
+                    </Link>
+                    {/* <a href={item.url}>
+                      <item.icon />
+                      <span>{item.title}</span>
+                    </a> */}
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
