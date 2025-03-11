@@ -12,14 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from "~/components/ui/table";
-
-// Define Route type locally until type generation is properly set up
-export interface RouteComponentProps {
-  loaderData: {
-    projects: Schema["Project"]["type"][];
-    error?: string;
-  };
-}
+import type { Route } from "./+types/projects";
 
 export function meta() {
   return [
@@ -43,7 +36,7 @@ export async function clientLoader() {
   }
 }
 
-export default function Projects({ loaderData }: RouteComponentProps) {
+export default function Projects({ loaderData }: Route.ComponentProps) {
   const { projects = [], error } = loaderData || {
     projects: [],
     error: undefined,

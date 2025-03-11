@@ -3,18 +3,7 @@ import { useNavigate } from "react-router";
 import type { Schema } from "../../../amplify/data/resource";
 import { ProjectForm } from "~/components/project-form";
 import { client } from "~/lib/amplify-client";
-
-// Define Route type locally until type generation is properly set up
-export interface RouteComponentProps {
-  loaderData: {
-    project?: Schema["Project"]["type"];
-    error?: string;
-  };
-}
-
-export interface RouteClientActionArgs {
-  request: Request;
-}
+import type { Route } from "../projects/+types/new";
 
 export function meta() {
   return [
@@ -23,7 +12,7 @@ export function meta() {
   ];
 }
 
-export async function clientAction({ request }: RouteClientActionArgs) {
+export async function clientAction({ request }: Route.ClientActionArgs) {
   const formData = await request.formData();
 
   const name = formData.get("name") as string;
@@ -56,9 +45,12 @@ export async function clientAction({ request }: RouteClientActionArgs) {
   }
 }
 
-export default function NewProject({ loaderData }: RouteComponentProps) {
+export default function NewProject({ loaderData }: Route.ComponentProps) {
   const navigate = useNavigate();
-  const { project, error } = loaderData || {};
+  const { project, error } = loaderData || {
+    project: undefined,
+    error: undefined,
+  };
 
   // If project was created successfully, navigate to projects list
   if (project && !error) {
