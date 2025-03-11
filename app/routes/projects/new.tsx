@@ -5,17 +5,15 @@ import { ProjectForm } from "~/components/project-form";
 import { client } from "~/lib/amplify-client";
 
 // Define Route type locally until type generation is properly set up
-namespace Route {
-  export interface ComponentProps {
-    loaderData: {
-      project?: Schema["Project"]["type"];
-      error?: string;
-    };
-  }
-  
-  export interface ClientActionArgs {
-    request: Request;
-  }
+export interface RouteComponentProps {
+  loaderData: {
+    project?: Schema["Project"]["type"];
+    error?: string;
+  };
+}
+
+export interface RouteClientActionArgs {
+  request: Request;
 }
 
 export function meta() {
@@ -25,7 +23,7 @@ export function meta() {
   ];
 }
 
-export async function clientAction({ request }: Route.ClientActionArgs) {
+export async function clientAction({ request }: RouteClientActionArgs) {
   const formData = await request.formData();
 
   const name = formData.get("name") as string;
@@ -58,7 +56,7 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
   }
 }
 
-export default function NewProject({ loaderData }: Route.ComponentProps) {
+export default function NewProject({ loaderData }: RouteComponentProps) {
   const navigate = useNavigate();
   const { project, error } = loaderData || {};
 

@@ -1,16 +1,6 @@
 // No need to import React with modern JSX transform
 import { useNavigate } from "react-router";
 import type { Schema } from "../../amplify/data/resource";
-
-// Define Route type locally until type generation is properly set up
-namespace Route {
-  export interface ComponentProps {
-    loaderData: {
-      projects: Schema["Project"]["type"][];
-      error?: string;
-    };
-  }
-}
 import { Button } from "~/components/ui/button";
 import { client } from "~/lib/amplify-client";
 import {
@@ -22,6 +12,14 @@ import {
   TableHeader,
   TableRow,
 } from "~/components/ui/table";
+
+// Define Route type locally until type generation is properly set up
+export interface RouteComponentProps {
+  loaderData: {
+    projects: Schema["Project"]["type"][];
+    error?: string;
+  };
+}
 
 export function meta() {
   return [
@@ -45,7 +43,7 @@ export async function clientLoader() {
   }
 }
 
-export default function Projects({ loaderData }: Route.ComponentProps) {
+export default function Projects({ loaderData }: RouteComponentProps) {
   const { projects = [], error } = loaderData || {
     projects: [],
     error: undefined,
