@@ -1,75 +1,15 @@
-import * as React from "react";
-import { useState } from "react";
+import { Form, useNavigation } from "react-router";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
-import { client } from "~/lib/amplify-client";
 
 interface ProjectFormProps {
-  onProjectCreated: () => void;
+  error: Error | null;
   onCancel: () => void;
 }
 
-export function ProjectForm({ onProjectCreated, onCancel }: ProjectFormProps) {
-  const [formData, setFormData] = useState({
-    name: "",
-    clientName: "",
-    overview: "",
-    startDate: "",
-    endDate: "",
-  });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
-
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
-  ) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (
-      !formData.name ||
-      !formData.clientName ||
-      !formData.overview ||
-      !formData.startDate ||
-      !formData.endDate
-    ) {
-      setError(new Error("All fields are required"));
-      return;
-    }
-
-    try {
-      setLoading(true);
-      await client.models.Project.create({
-        name: formData.name,
-        clientName: formData.clientName,
-        overview: formData.overview,
-        startDate: new Date(formData.startDate),
-        endDate: new Date(formData.endDate),
-      });
-
-      setFormData({
-        name: "",
-        clientName: "",
-        overview: "",
-        startDate: "",
-        endDate: "",
-      });
-
-      setError(null);
-      onProjectCreated();
-    } catch (err) {
-      console.error("Error creating project:", err);
-      setError(
-        err instanceof Error ? err : new Error("Unknown error occurred"),
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
+export function ProjectForm({ error, onCancel }: ProjectFormProps) {
+  const navigation = useNavigation();
+  const isSubmitting = navigation.state === "submitting";
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
@@ -81,7 +21,7 @@ export function ProjectForm({ onProjectCreated, onCancel }: ProjectFormProps) {
         </div>
       )}
 
-      <form onSubmit={handleSubmit}>
+      <Form method="post">
         <div className="mb-4">
           <label
             htmlFor="name"
@@ -89,13 +29,7 @@ export function ProjectForm({ onProjectCreated, onCancel }: ProjectFormProps) {
           >
             Project Name *
           </label>
-          <Input
-            id="name"
-            name="name"
-            value={formData.name}
-            onChange={handleChange}
-            required
-          />
+          <Input id="name" name="name" required />
         </div>
 
         <div className="mb-4">
@@ -105,13 +39,7 @@ export function ProjectForm({ onProjectCreated, onCancel }: ProjectFormProps) {
           >
             Client Name *
           </label>
-          <Input
-            id="clientName"
-            name="clientName"
-            value={formData.clientName}
-            onChange={handleChange}
-            required
-          />
+          <Input id="clientName" name="clientName" required />
         </div>
 
         <div className="mb-4">
@@ -124,8 +52,6 @@ export function ProjectForm({ onProjectCreated, onCancel }: ProjectFormProps) {
           <textarea
             id="overview"
             name="overview"
-            value={formData.overview}
-            onChange={handleChange}
             required
             className="flex h-20 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
           />
@@ -138,14 +64,7 @@ export function ProjectForm({ onProjectCreated, onCancel }: ProjectFormProps) {
           >
             Start Date *
           </label>
-          <Input
-            id="startDate"
-            name="startDate"
-            type="date"
-            value={formData.startDate}
-            onChange={handleChange}
-            required
-          />
+          <Input id="startDate" name="startDate" type="date" required />
         </div>
 
         <div className="mb-4">
@@ -155,14 +74,7 @@ export function ProjectForm({ onProjectCreated, onCancel }: ProjectFormProps) {
           >
             End Date *
           </label>
-          <Input
-            id="endDate"
-            name="endDate"
-            type="date"
-            value={formData.endDate}
-            onChange={handleChange}
-            required
-          />
+          <Input id="endDate" name="endDate" type="date" required />
         </div>
 
         <div className="flex justify-end space-x-2">
@@ -170,15 +82,15 @@ export function ProjectForm({ onProjectCreated, onCancel }: ProjectFormProps) {
             type="button"
             variant="outline"
             onClick={onCancel}
-            disabled={loading}
+            disabled={isSubmitting}
           >
             Cancel
           </Button>
-          <Button type="submit" disabled={loading}>
-            {loading ? "Saving..." : "Save Project"}
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? "Saving..." : "Save Project"}
           </Button>
         </div>
-      </form>
+      </Form>
     </div>
   );
 }

@@ -1,5 +1,5 @@
 // No need to import React with modern JSX transform
-import { useLoaderData, useNavigate } from "react-router";
+import { useNavigate } from "react-router";
 import type { Schema } from "../../amplify/data/resource";
 import { Button } from "~/components/ui/button";
 import { client } from "~/lib/amplify-client";
@@ -40,8 +40,11 @@ export async function clientLoader() {
   }
 }
 
-export default function Projects() {
-  const { projects, error } = useLoaderData() as LoaderData;
+export default function Projects(props: { loaderData?: LoaderData }) {
+  const { projects = [], error } = props.loaderData || {
+    projects: [],
+    error: undefined,
+  };
   const navigate = useNavigate();
 
   const formatDate = (dateString: string) => {
@@ -81,7 +84,7 @@ export default function Projects() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {projects.map((project) => (
+            {projects.map((project: Project) => (
               <TableRow key={project.id}>
                 <TableCell className="font-medium">{project.name}</TableCell>
                 <TableCell>{project.clientName}</TableCell>
