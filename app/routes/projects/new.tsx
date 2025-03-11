@@ -1,8 +1,22 @@
 // No need to import React with modern JSX transform
-import { useNavigate, useActionData } from "react-router";
+import { useNavigate } from "react-router";
+import type { Schema } from "../../../amplify/data/resource";
 import { ProjectForm } from "~/components/project-form";
 import { client } from "~/lib/amplify-client";
-import type { Schema } from "../../../amplify/data/resource";
+
+// Define Route type locally until type generation is properly set up
+namespace Route {
+  export interface ComponentProps {
+    loaderData: {
+      project?: Schema["Project"]["type"];
+      error?: string;
+    };
+  }
+  
+  export interface ClientActionArgs {
+    request: Request;
+  }
+}
 
 export function meta() {
   return [
@@ -11,7 +25,7 @@ export function meta() {
   ];
 }
 
-export async function clientAction({ request }: { request: Request }) {
+export async function clientAction({ request }: Route.ClientActionArgs) {
   const formData = await request.formData();
 
   const name = formData.get("name") as string;
@@ -44,15 +58,12 @@ export async function clientAction({ request }: { request: Request }) {
   }
 }
 
-export default function NewProject() {
+export default function NewProject({ loaderData }: Route.ComponentProps) {
   const navigate = useNavigate();
-  const actionData = useActionData<{
-    project?: Schema["Project"]["type"];
-    error?: string;
-  }>();
+  const { project, error } = loaderData || {};
 
   // If project was created successfully, navigate to projects list
-  if (actionData?.project && !actionData.error) {
+  if (project && !error) {
     navigate("/projects");
   }
 
@@ -60,7 +71,7 @@ export default function NewProject() {
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-6">Create New Project</h1>
       <ProjectForm
-        error={actionData?.error ? new Error(actionData.error) : null}
+        error={error ? new Error(error) : null}
         onCancel={() => navigate("/projects")}
       />
     </div>
