@@ -1,7 +1,6 @@
 // No need to import React with modern JSX transform
 import { useNavigate } from "react-router";
 import { useEffect } from "react";
-import type { Schema } from "../../../amplify/data/resource";
 import { ProjectForm } from "~/components/project-form";
 import { client } from "~/lib/amplify-client";
 import type { Route } from "../projects/+types/new";
@@ -26,23 +25,19 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
     return { error: "All fields are required" };
   }
 
-  try {
-    // Create the project with the Amplify client
-    const result = await client.models.Project.create({
-      name,
-      clientName,
-      overview,
-      startDate,
-      endDate,
-    } as unknown as Schema["Project"]["type"]); // Use type assertion with proper type
+  // Create the project with the Amplify client
+  const { data, errors } = await client.models.Project.create({
+    name,
+    clientName,
+    overview,
+    startDate,
+    endDate,
+  });
 
-    return { project: result };
-  } catch (err) {
-    console.error("Error creating project:", err);
-    return {
-      error: err instanceof Error ? err.message : "Unknown error occurred",
-    };
-  }
+  return {
+    project: data,
+    error: errors?.map((error) => error.message)?.join(", "),
+  };
 }
 
 export default function NewProject({ actionData }: Route.ComponentProps) {
