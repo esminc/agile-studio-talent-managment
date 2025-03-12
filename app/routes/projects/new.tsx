@@ -1,5 +1,6 @@
 // No need to import React with modern JSX transform
 import { useNavigate } from "react-router";
+import { useEffect } from "react";
 import type { Schema } from "../../../amplify/data/resource";
 import { ProjectForm } from "~/components/project-form";
 import { client } from "~/lib/amplify-client";
@@ -27,13 +28,12 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
 
   try {
     // Create the project with the Amplify client
-    // The schema expects date objects for startDate and endDate
     const result = await client.models.Project.create({
       name,
       clientName,
       overview,
-      startDate: new Date(startDate),
-      endDate: new Date(endDate),
+      startDate,
+      endDate,
     } as unknown as Schema["Project"]["type"]); // Use type assertion with proper type
 
     return { project: result };
@@ -45,17 +45,19 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
   }
 }
 
-export default function NewProject({ loaderData }: Route.ComponentProps) {
+export default function NewProject({ actionData }: Route.ComponentProps) {
   const navigate = useNavigate();
-  const { project, error } = loaderData || {
+  const { project, error } = actionData || {
     project: undefined,
     error: undefined,
   };
 
   // If project was created successfully, navigate to projects list
-  if (project && !error) {
-    navigate("/projects");
-  }
+  useEffect(() => {
+    if (project && !error) {
+      navigate("/projects");
+    }
+  }, [project, error, navigate]);
 
   return (
     <div className="container mx-auto p-4">
