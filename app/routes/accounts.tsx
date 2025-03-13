@@ -3,8 +3,8 @@ import { useState, useEffect } from "react";
 import type { Schema } from "../../amplify/data/resource";
 import { Button } from "../components/ui/button";
 import { AccountCard } from "../components/account-card";
-import { AccountForm } from "../components/account-form";
 import { client } from "../lib/amplify-client";
+import { useNavigate } from "react-router";
 
 export function meta() {
   return [
@@ -19,7 +19,7 @@ export default function Accounts() {
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
-  const [showForm, setShowForm] = useState(false);
+  const navigate = useNavigate();
   const fetchAccounts = async () => {
     try {
       setLoading(true);
@@ -39,28 +39,16 @@ export default function Accounts() {
     fetchAccounts();
   }, []);
 
-  const handleAccountCreated = () => {
-    setShowForm(false);
-    fetchAccounts();
-  };
+  // handleAccountCreated removed as it's no longer needed
 
   return (
     <div className="container mx-auto p-4">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Accounts</h1>
-        <Button onClick={() => setShowForm(!showForm)}>
-          {showForm ? "Cancel" : "Add Account"}
-        </Button>
+        <Button onClick={() => navigate("/accounts/new")}>Add Account</Button>
       </div>
 
-      {showForm && (
-        <div className="mb-6">
-          <AccountForm
-            onAccountCreated={handleAccountCreated}
-            onCancel={() => setShowForm(false)}
-          />
-        </div>
-      )}
+      {/* Inline form removed */}
 
       {error && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
