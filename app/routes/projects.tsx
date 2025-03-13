@@ -43,9 +43,8 @@ export default function Projects({ loaderData }: Route.ComponentProps) {
   };
   const navigate = useNavigate();
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString();
+  const formatDate = (dateString?: string | null) => {
+    return dateString ? new Date(dateString).toLocaleDateString() : "";
   };
 
   return (

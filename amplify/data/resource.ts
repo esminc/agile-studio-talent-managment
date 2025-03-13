@@ -33,7 +33,7 @@ const schema = a.schema({
       clientName: a.string().required(),
       overview: a.string().required(),
       startDate: a.date().required(),
-      endDate: a.date().required(),
+      endDate: a.date(),
       assignments: a.hasMany("ProjectAssignment", "projectId"),
       technologies: a.hasMany("ProjectTechnologyLink", "projectId"),
     })

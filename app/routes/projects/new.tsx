@@ -21,7 +21,7 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
   const startDate = formData.get("startDate") as string;
   const endDate = formData.get("endDate") as string;
 
-  if (!name || !clientName || !overview || !startDate || !endDate) {
+  if (!name || !clientName || !overview || !startDate) {
     return { error: "All fields are required" };
   }
 
@@ -31,7 +31,7 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
     clientName,
     overview,
     startDate,
-    endDate,
+    endDate: endDate || null,
   });
 
   return {

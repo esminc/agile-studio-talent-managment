@@ -72,9 +72,9 @@ export function ProjectForm({ error, onCancel }: ProjectFormProps) {
             htmlFor="endDate"
             className="block text-sm font-medium text-gray-700 mb-1"
           >
-            End Date *
+            End Date
           </label>
-          <Input id="endDate" name="endDate" type="date" required />
+          <Input id="endDate" name="endDate" type="date" />
         </div>
 
         <div className="flex justify-end space-x-2">
