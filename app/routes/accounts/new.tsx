@@ -1,9 +1,8 @@
 // No need to import React with modern JSX transform
 import { useNavigate } from "react-router";
 import { useEffect } from "react";
-import type { Schema } from "../../../amplify/data/resource";
 import { AccountForm } from "../../components/account-form";
-// AccountFormProps is defined inline
+import type { Route } from "./+types/new";
 import { client } from "../../lib/amplify-client";
 
 export function meta() {
@@ -13,11 +12,7 @@ export function meta() {
   ];
 }
 
-interface ClientActionArgs {
-  request: Request;
-}
-
-export async function clientAction({ request }: ClientActionArgs) {
+export async function clientAction({ request }: Route.ClientActionArgs) {
   const formData = await request.formData();
 
   const name = formData.get("name") as string;
@@ -43,14 +38,7 @@ export async function clientAction({ request }: ClientActionArgs) {
   };
 }
 
-interface ComponentProps {
-  actionData?: {
-    account?: Schema["Account"]["type"];
-    error?: string;
-  };
-}
-
-export default function NewAccount({ actionData }: ComponentProps) {
+export default function NewAccount({ actionData }: Route.ComponentProps) {
   const navigate = useNavigate();
   const { account, error } = actionData || {
     account: undefined,
@@ -68,7 +56,7 @@ export default function NewAccount({ actionData }: ComponentProps) {
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-6">Create New Account</h1>
       <AccountForm
-        onAccountCreated={() => {}} // Not used with clientAction
+        error={error ? new Error(error) : null}
         onCancel={() => navigate("/accounts")}
       />
     </div>
