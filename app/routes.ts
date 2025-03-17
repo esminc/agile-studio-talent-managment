@@ -10,6 +10,7 @@ export default [
   layout("./routes/protected/layout.tsx", [
     index("routes/home.tsx"),
     route("accounts", "routes/accounts.tsx"),
+    route("accounts/new", "routes/accounts/new.tsx"),
     route("projects", "routes/projects.tsx"),
     route("projects/new", "routes/projects/new.tsx"),
   ]),
