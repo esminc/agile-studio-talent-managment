@@ -27,7 +27,15 @@ type ProjectTechnology = Schema["ProjectTechnology"]["type"];
 
 export async function clientLoader() {
   try {
-    const { data } = await client.models.ProjectTechnology.list();
+    const { data } = await client.models.ProjectTechnology.list({
+      selectionSet: [
+        "id",
+        "name",
+        "projects.id",
+        "projects.project.id",
+        "projects.project.name",
+      ],
+    });
     return { projectTechnologies: data };
   } catch (err) {
     console.error("Error fetching project technologies:", err);
@@ -89,7 +97,13 @@ export default function ProjectTechnologies({
             {projectTechnologies.map((technology: ProjectTechnology) => (
               <TableRow key={technology.id}>
                 <TableCell className="font-medium">{technology.name}</TableCell>
-                <TableCell>{technology.projects?.length || 0}</TableCell>
+                <TableCell>
+                  {
+                    Object.values(technology.projects || {}).filter(
+                      (link) => link?.project?.id,
+                    ).length
+                  }
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
