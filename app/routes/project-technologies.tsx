@@ -32,8 +32,8 @@ export async function clientLoader() {
         "id",
         "name",
         "projects.id",
-        "projects.project.id",
-        "projects.project.name",
+        "projects.projectId",
+        "projects.technologyId",
       ],
     });
     return { projectTechnologies: data };
@@ -98,11 +98,7 @@ export default function ProjectTechnologies({
               <TableRow key={technology.id}>
                 <TableCell className="font-medium">{technology.name}</TableCell>
                 <TableCell>
-                  {
-                    Object.values(technology.projects || {}).filter(
-                      (link) => link?.project?.id,
-                    ).length
-                  }
+                  {Object.keys(technology.projects || {}).length}
                 </TableCell>
               </TableRow>
             ))}
