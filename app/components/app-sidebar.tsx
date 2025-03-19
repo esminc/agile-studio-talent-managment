@@ -30,6 +30,11 @@ const items = [
     icon: Briefcase,
   },
   {
+    title: "Project Technologies",
+    url: "/project-technologies",
+    icon: Briefcase,
+  },
+  {
     title: "Settings",
     url: "#",
     icon: Settings,
