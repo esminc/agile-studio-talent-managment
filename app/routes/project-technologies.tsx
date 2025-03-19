@@ -1,6 +1,5 @@
 // No need to import React with modern JSX transform
 import { useNavigate } from "react-router";
-import type { Schema } from "../../amplify/data/resource";
 import { Button } from "../components/ui/button";
 import { client } from "../lib/amplify-client";
 import {
@@ -12,6 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from "../components/ui/table";
+import type { Route } from "./+types/project-technologies";
 
 export function meta() {
   return [
@@ -23,18 +23,10 @@ export function meta() {
   ];
 }
 
-type ProjectTechnology = Schema["ProjectTechnology"]["type"];
-
 export async function clientLoader() {
   try {
     const { data } = await client.models.ProjectTechnology.list({
-      selectionSet: [
-        "id",
-        "name",
-        "projects.id",
-        "projects.projectId",
-        "projects.technologyId",
-      ],
+      selectionSet: ["id", "name", "projects.*"],
     });
     return { projectTechnologies: data };
   } catch (err) {
@@ -46,16 +38,9 @@ export async function clientLoader() {
   }
 }
 
-interface LoaderData {
-  projectTechnologies: ProjectTechnology[];
-  error?: string;
-}
-
 export default function ProjectTechnologies({
   loaderData,
-}: {
-  loaderData: LoaderData | undefined;
-}) {
+}: Route.ComponentProps) {
   const { projectTechnologies = [], error } = loaderData || {
     projectTechnologies: [],
     error: undefined,
@@ -94,12 +79,10 @@ export default function ProjectTechnologies({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {projectTechnologies.map((technology: ProjectTechnology) => (
+            {projectTechnologies.map((technology) => (
               <TableRow key={technology.id}>
                 <TableCell className="font-medium">{technology.name}</TableCell>
-                <TableCell>
-                  {Object.keys(technology.projects || {}).length}
-                </TableCell>
+                <TableCell>{technology.projects.length}</TableCell>
               </TableRow>
             ))}
           </TableBody>
