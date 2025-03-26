@@ -81,7 +81,14 @@ export default function Projects({ loaderData }: Route.ComponentProps) {
           <TableBody>
             {projects.map((project: Project) => (
               <TableRow key={project.id}>
-                <TableCell className="font-medium">{project.name}</TableCell>
+                <TableCell className="font-medium">
+                  <a 
+                    href={`/projects/${project.id}`}
+                    className="text-blue-600 hover:underline"
+                  >
+                    {project.name}
+                  </a>
+                </TableCell>
                 <TableCell>{project.clientName}</TableCell>
                 <TableCell>{project.overview}</TableCell>
                 <TableCell>{formatDate(project.startDate)}</TableCell>
