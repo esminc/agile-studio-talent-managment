@@ -12,9 +12,10 @@ import type { Route } from "../.react-router/types/app/+types/root";
 import { Authenticator, ThemeProvider } from "@aws-amplify/ui-react";
 import "@aws-amplify/ui-react/styles.css";
 import "./app.css";
-import config from "../amplify_outputs.json";
 import { Hub } from "aws-amplify/utils";
 import { useEffect } from "react";
+import { ToasterProvider } from "~/components/toaster-provider";
+import config from "../amplify_outputs.json";
 
 Amplify.configure(config);
 
@@ -42,7 +43,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </head>
       <body>
         <Authenticator.Provider>
-          <ThemeProvider>{children}</ThemeProvider>
+          <ThemeProvider>
+            {children}
+            <ToasterProvider />
+          </ThemeProvider>
         </Authenticator.Provider>
         <ScrollRestoration />
         <Scripts />

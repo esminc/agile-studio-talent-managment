@@ -1,7 +1,17 @@
 import { useNavigate } from "react-router";
+import { useState, useEffect } from "react";
 import { client } from "~/lib/amplify-client";
 import { Button } from "~/components/ui/button";
 import { Badge } from "~/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "~/components/ui/dialog";
+import { useToast } from "~/components/ui/use-toast";
 import type { Route } from "./+types/index";
 import type { Schema } from "amplify/data/resource";
 
@@ -65,17 +75,99 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   }
 }
 
-export default function ProjectDetails({ loaderData }: Route.ComponentProps) {
+export async function clientAction({ params }: Route.ClientActionArgs) {
+  try {
+    const projectId = params.projectId;
+
+    const { data: project } = await client.models.Project.get(
+      {
+        id: projectId,
+      },
+      {
+        selectionSet: ["id", "technologies.*"],
+      },
+    );
+
+    if (!project) {
+      return { error: "Project not found" };
+    }
+
+    for (const techLink of project.technologies) {
+      await client.models.ProjectTechnologyLink.delete({
+        id: techLink.id,
+      });
+    }
+
+    await client.models.Project.delete({
+      id: projectId,
+    });
+
+    return { success: true };
+  } catch (err) {
+    console.error("Error deleting project:", err);
+    return {
+      error: err instanceof Error ? err.message : "Unknown error occurred",
+    };
+  }
+}
+
+export default function ProjectDetails({
+  loaderData,
+  actionData,
+}: Route.ComponentProps) {
   const { project, technologies, error } = loaderData || {
     project: null,
     technologies: [],
     error: undefined,
   };
   const navigate = useNavigate();
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [, setIsDeleting] = useState(false);
+  const { success, error: deleteError } = actionData || {
+    success: false,
+    error: undefined,
+  };
+  const { toast } = useToast();
 
   const formatDate = (dateString?: string | null) => {
     return dateString ? new Date(dateString).toLocaleDateString() : "-";
   };
+
+  useEffect(() => {
+    if (success) {
+      navigate("/projects");
+    }
+  }, [success, navigate]);
+
+  useEffect(() => {
+    if (deleteError) {
+      toast({
+        variant: "destructive",
+        title: "削除エラー",
+        description: deleteError,
+      });
+    }
+  }, [deleteError, toast]);
+
+  async function handleDeleteProject() {
+    setDeleteDialogOpen(false);
+    setIsDeleting(true);
+    try {
+      await fetch(`/projects/${project?.id}`, { method: "DELETE" });
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : "削除中に予期せぬエラーが発生しました";
+      toast({
+        variant: "destructive",
+        title: "削除エラー",
+        description: errorMessage,
+      });
+    } finally {
+      setIsDeleting(false);
+    }
+  }
 
   if (error) {
     return (
@@ -112,6 +204,12 @@ export default function ProjectDetails({ loaderData }: Route.ComponentProps) {
           </Button>
           <Button onClick={() => navigate(`/projects/${project.id}/edit`)}>
             Edit Project
+          </Button>
+          <Button
+            variant="destructive"
+            onClick={() => setDeleteDialogOpen(true)}
+          >
+            削除
           </Button>
         </div>
       </div>
@@ -152,6 +250,29 @@ export default function ProjectDetails({ loaderData }: Route.ComponentProps) {
           </div>
         )}
       </div>
+
+      {/* 削除確認ダイアログ */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>プロジェクトを削除しますか？</DialogTitle>
+            <DialogDescription>
+              この操作は元に戻せません。このプロジェクトとそれに関連するすべての技術リンクが削除されます。
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="mt-4 flex justify-end gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setDeleteDialogOpen(false)}
+            >
+              キャンセル
+            </Button>
+            <Button variant="destructive" onClick={handleDeleteProject}>
+              削除する
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
