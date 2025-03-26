@@ -15,21 +15,21 @@ export default defineConfig({
   },
   optimizeDeps: {
     exclude: [
-      '@aws-amplify/backend',
-      '@aws-amplify/backend-auth',
-      '@aws-amplify/backend-data',
-      '@aws-amplify/backend-function',
-      '@aws-amplify/backend-storage',
+      "@aws-amplify/backend",
+      "@aws-amplify/backend-auth",
+      "@aws-amplify/backend-data",
+      "@aws-amplify/backend-function",
+      "@aws-amplify/backend-storage",
     ],
   },
   build: {
     rollupOptions: {
       external: [
-        '@aws-amplify/backend',
-        '@aws-amplify/backend-auth',
-        '@aws-amplify/backend-data',
-        '@aws-amplify/backend-function',
-        '@aws-amplify/backend-storage',
+        "@aws-amplify/backend",
+        "@aws-amplify/backend-auth",
+        "@aws-amplify/backend-data",
+        "@aws-amplify/backend-function",
+        "@aws-amplify/backend-storage",
       ],
     },
   },

@@ -13,6 +13,8 @@ export default [
     route("accounts/new", "routes/accounts/new.tsx"),
     route("projects", "routes/projects.tsx"),
     route("projects/new", "routes/projects/new.tsx"),
+    route("projects/:projectId", "routes/projects/$projectId/index.tsx"),
+    route("projects/:projectId/edit", "routes/projects/$projectId/edit.tsx"),
     route("project-technologies", "routes/project-technologies.tsx"),
     route("project-technologies/new", "routes/project-technologies/new.tsx"),
   ]),
