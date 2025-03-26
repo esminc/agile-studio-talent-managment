@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { ProjectForm } from "~/components/project-form";
 import { client } from "~/lib/amplify-client";
 import type { Route } from "./+types/edit";
+import { updateProjectTechnologyLinks } from "~/lib/project";
 
 export function meta() {
   return [
@@ -98,36 +99,12 @@ export async function clientAction({
       return { error: errors.map((error) => error.message).join(", ") };
     }
 
-    const { data: currentLinks } = await client.models.Project.get(
-      {
-        id: projectId,
-      },
-      {
-        selectionSet: ["technologies.*"],
-      },
-    );
-
-    const currentTechIds =
-      currentLinks?.technologies.map((tech) => tech.technologyId) ?? [];
-
-    const linksToRemove =
-      currentLinks?.technologies.filter(
-        (link) => !techIds.includes(link.technologyId),
-      ) ?? [];
-    for (const linkToRemove of linksToRemove) {
-      await client.models.ProjectTechnologyLink.delete({
-        id: linkToRemove.id,
+    if (updatedProject) {
+      await updateProjectTechnologyLinks({
+        project: updatedProject,
+        projectTechnologyIds: techIds,
       });
     }
-
-    const techToAdd = techIds.filter((id) => !currentTechIds.includes(id));
-    for (const techId of techToAdd) {
-      await client.models.ProjectTechnologyLink.create({
-        projectId: projectId,
-        technologyId: techId,
-      });
-    }
-
     return {
       project: updatedProject,
       success: true,
