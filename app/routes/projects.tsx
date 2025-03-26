@@ -82,7 +82,7 @@ export default function Projects({ loaderData }: Route.ComponentProps) {
             {projects.map((project: Project) => (
               <TableRow key={project.id}>
                 <TableCell className="font-medium">
-                  <a 
+                  <a
                     href={`/projects/${project.id}`}
                     className="text-blue-600 hover:underline"
                   >
