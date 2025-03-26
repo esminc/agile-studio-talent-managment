@@ -2,7 +2,13 @@ import { useNavigate } from "react-router";
 import { client } from "~/lib/amplify-client";
 import { Button } from "~/components/ui/button";
 import { Badge } from "~/components/ui/badge";
-import type { Route } from "../+types/projects/$projectId";
+import type { Route } from "./+types/index";
+import type { Schema } from "amplify/data/resource";
+
+type ProjectTechnology = Pick<
+  Schema["ProjectTechnology"]["type"],
+  "id" | "name"
+>;
 
 export function meta() {
   return [
@@ -11,33 +17,37 @@ export function meta() {
   ];
 }
 
-export async function clientLoader({ params }) {
+export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   try {
     const projectId = params.projectId;
 
-    const { data: project } = await client.models.Project.get({
-      id: projectId,
-      selectionSet: [
-        "id",
-        "name",
-        "clientName",
-        "overview",
-        "startDate",
-        "endDate",
-        "technologies.*",
-      ],
-    });
+    const { data: project } = await client.models.Project.get(
+      {
+        id: projectId,
+      },
+      {
+        selectionSet: [
+          "id",
+          "name",
+          "clientName",
+          "overview",
+          "startDate",
+          "endDate",
+          "technologies.*",
+        ],
+      },
+    );
 
     if (!project) {
       return { error: "Project not found" };
     }
 
     const techIds = project.technologies.map((tech) => tech.technologyId);
-    let technologies = [];
+    let technologies: ProjectTechnology[] = [];
 
     if (techIds.length > 0) {
       const { data: techData } = await client.models.ProjectTechnology.list({
-        filter: { id: { in: techIds } },
+        filter: { or: techIds.map((techId) => ({ id: { eq: techId } })) },
         selectionSet: ["id", "name"],
       });
       technologies = techData;

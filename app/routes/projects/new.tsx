@@ -12,6 +12,15 @@ export function meta() {
   ];
 }
 
+export async function clientLoader() {
+  const { data: techData } = await client.models.ProjectTechnology.list({
+    selectionSet: ["id", "name"],
+  });
+  return {
+    technologies: techData,
+  };
+}
+
 export async function clientAction({ request }: Route.ClientActionArgs) {
   const formData = await request.formData();
 
@@ -40,8 +49,12 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
   };
 }
 
-export default function NewProject({ actionData }: Route.ComponentProps) {
+export default function NewProject({
+  actionData,
+  loaderData,
+}: Route.ComponentProps) {
   const navigate = useNavigate();
+  const { technologies } = loaderData;
   const { project, error } = actionData || {
     project: undefined,
     error: undefined,
@@ -60,6 +73,7 @@ export default function NewProject({ actionData }: Route.ComponentProps) {
       <ProjectForm
         error={error ? new Error(error) : null}
         onCancel={() => navigate("/projects")}
+        technologies={technologies}
       />
     </div>
   );

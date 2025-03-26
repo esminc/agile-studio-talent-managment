@@ -3,14 +3,34 @@ import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 
 import type { Schema } from "../../amplify/data/resource";
+import { useState } from "react";
+import { MultiSelect } from "./ui/multi-select";
+
+type ProjectTechnologyLink = Pick<
+  Schema["ProjectTechnologyLink"]["type"],
+  "id" | "projectId" | "technologyId"
+>;
+
+type Project = Pick<
+  Schema["Project"]["type"],
+  "id" | "clientName" | "name" | "overview" | "startDate" | "endDate"
+> & {
+  technologies?: ProjectTechnologyLink[] | null;
+};
 
 interface ProjectFormProps {
   error: Error | null;
   onCancel: () => void;
-  project?: Schema["Project"]["type"] | null;
+  project?: Project | null;
+  technologies: Pick<Schema["ProjectTechnology"]["type"], "name" | "id">[];
 }
 
-export function ProjectForm({ error, onCancel, project }: ProjectFormProps) {
+export function ProjectForm({
+  error,
+  onCancel,
+  project,
+  technologies,
+}: ProjectFormProps) {
   const navigation = useNavigation();
   const isSubmitting = navigation.state === "submitting";
   const isEditing = !!project;
@@ -20,6 +40,14 @@ export function ProjectForm({ error, onCancel, project }: ProjectFormProps) {
     const date = new Date(dateString);
     return date.toISOString().split("T")[0];
   };
+
+  const techOptions = technologies.map((tech) => ({
+    value: tech.id,
+    label: tech.name,
+  }));
+
+  const linkedTechIds = project?.technologies?.map((tech) => tech.technologyId);
+  const [selectedTechIds, setSelectedTechIds] = useState(linkedTechIds || []);
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
@@ -109,6 +137,30 @@ export function ProjectForm({ error, onCancel, project }: ProjectFormProps) {
             type="date"
             defaultValue={formatDateForInput(project?.endDate)}
           />
+        </div>
+
+        <input
+          type="hidden"
+          name="selectedTechnologies"
+          value={JSON.stringify(selectedTechIds)}
+        />
+
+        <div className="space-y-4">
+          {technologies.length === 0 ? (
+            <p className="text-gray-500">No technologies available.</p>
+          ) : (
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Select Technologies
+              </label>
+              <MultiSelect
+                options={techOptions}
+                selected={selectedTechIds}
+                onChange={setSelectedTechIds}
+                placeholder="Select technologies..."
+              />
+            </div>
+          )}
         </div>
 
         <div className="flex justify-end space-x-2">

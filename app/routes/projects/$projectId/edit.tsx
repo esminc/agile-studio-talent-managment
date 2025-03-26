@@ -2,8 +2,7 @@ import { useNavigate } from "react-router";
 import { useEffect } from "react";
 import { ProjectForm } from "~/components/project-form";
 import { client } from "~/lib/amplify-client";
-import { MultiSelect } from "~/components/ui/multi-select";
-import type { Route } from "../+types/projects/$projectId/edit";
+import type { Route } from "./+types/edit";
 
 export function meta() {
   return [
@@ -12,21 +11,25 @@ export function meta() {
   ];
 }
 
-export async function clientLoader({ params }) {
+export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   try {
     const projectId = params.projectId;
-    const { data: project } = await client.models.Project.get({
-      id: projectId,
-      selectionSet: [
-        "id",
-        "name",
-        "clientName",
-        "overview",
-        "startDate",
-        "endDate",
-        "technologies.*",
-      ],
-    });
+    const { data: project } = await client.models.Project.get(
+      {
+        id: projectId,
+      },
+      {
+        selectionSet: [
+          "id",
+          "name",
+          "clientName",
+          "overview",
+          "startDate",
+          "endDate",
+          "technologies.*",
+        ],
+      },
+    );
 
     if (!project) {
       return { error: "Project not found" };
@@ -39,7 +42,6 @@ export async function clientLoader({ params }) {
     return {
       project,
       technologies: techData,
-      linkedTechIds: project.technologies.map((tech) => tech.technologyId),
     };
   } catch (err) {
     console.error("Error fetching project:", err);
@@ -49,7 +51,10 @@ export async function clientLoader({ params }) {
   }
 }
 
-export async function clientAction({ request, params }) {
+export async function clientAction({
+  request,
+  params,
+}: Route.ClientActionArgs) {
   const formData = await request.formData();
   const projectId = params.projectId;
 
@@ -60,7 +65,7 @@ export async function clientAction({ request, params }) {
   const endDate = formData.get("endDate") as string;
   const selectedTechIds = formData.get("selectedTechnologies") as string;
 
-  const techIds = selectedTechIds ? JSON.parse(selectedTechIds) : [];
+  const techIds: string[] = selectedTechIds ? JSON.parse(selectedTechIds) : [];
 
   if (!name || !clientName || !overview || !startDate) {
     return { error: "All required fields must be filled out" };
@@ -76,26 +81,42 @@ export async function clientAction({ request, params }) {
         startDate,
         endDate: endDate || null,
       },
+      {
+        selectionSet: [
+          "id",
+          "name",
+          "clientName",
+          "overview",
+          "startDate",
+          "endDate",
+          "technologies.*",
+        ],
+      },
     );
 
     if (errors) {
       return { error: errors.map((error) => error.message).join(", ") };
     }
 
-    const { data: currentLinks } = await client.models.Project.get({
-      id: projectId,
-      selectionSet: ["technologies.*"],
-    });
-
-    const currentTechIds = currentLinks.technologies.map(
-      (tech) => tech.technologyId,
+    const { data: currentLinks } = await client.models.Project.get(
+      {
+        id: projectId,
+      },
+      {
+        selectionSet: ["technologies.*"],
+      },
     );
 
-    const techToRemove = currentTechIds.filter((id) => !techIds.includes(id));
-    for (const techId of techToRemove) {
+    const currentTechIds =
+      currentLinks?.technologies.map((tech) => tech.technologyId) ?? [];
+
+    const linksToRemove =
+      currentLinks?.technologies.filter(
+        (link) => !techIds.includes(link.technologyId),
+      ) ?? [];
+    for (const linkToRemove of linksToRemove) {
       await client.models.ProjectTechnologyLink.delete({
-        projectId: projectId,
-        technologyId: techId,
+        id: linkToRemove.id,
       });
     }
 
@@ -127,12 +148,10 @@ export default function EditProject({
   const {
     project,
     technologies,
-    linkedTechIds,
     error: loadError,
   } = loaderData || {
     project: null,
     technologies: [],
-    linkedTechIds: [],
     error: undefined,
   };
 
@@ -143,13 +162,9 @@ export default function EditProject({
 
   useEffect(() => {
     if (success) {
-      navigate(`/projects/${project.id}`);
+      navigate(`/projects/${project?.id}`);
     }
   }, [success, navigate, project]);
-
-  const [selectedTechIds, setSelectedTechIds] = React.useState(
-    linkedTechIds || [],
-  );
 
   if (loadError) {
     return (
@@ -177,11 +192,6 @@ export default function EditProject({
     );
   }
 
-  const techOptions = technologies.map((tech) => ({
-    value: tech.id,
-    label: tech.name,
-  }));
-
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-6">Edit Project</h1>
@@ -197,59 +207,8 @@ export default function EditProject({
           error={actionError ? new Error(actionError) : null}
           onCancel={() => navigate(`/projects/${project.id}`)}
           project={project}
+          technologies={technologies}
         />
-      </div>
-
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <h2 className="text-xl font-bold mb-4">Project Technologies</h2>
-
-        <form method="post">
-          {/* Hidden fields to carry over project data */}
-          <input type="hidden" name="name" value={project.name} />
-          <input type="hidden" name="clientName" value={project.clientName} />
-          <input type="hidden" name="overview" value={project.overview} />
-          <input type="hidden" name="startDate" value={project.startDate} />
-          <input type="hidden" name="endDate" value={project.endDate || ""} />
-          <input
-            type="hidden"
-            name="selectedTechnologies"
-            value={JSON.stringify(selectedTechIds)}
-          />
-
-          <div className="space-y-4">
-            {technologies.length === 0 ? (
-              <p className="text-gray-500">No technologies available.</p>
-            ) : (
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Select Technologies
-                </label>
-                <MultiSelect
-                  options={techOptions}
-                  selected={selectedTechIds}
-                  onChange={setSelectedTechIds}
-                  placeholder="Select technologies..."
-                />
-              </div>
-            )}
-          </div>
-
-          <div className="flex justify-end space-x-2 mt-6">
-            <button
-              type="button"
-              className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-100"
-              onClick={() => navigate(`/projects/${project.id}`)}
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-            >
-              Save Changes
-            </button>
-          </div>
-        </form>
       </div>
     </div>
   );
