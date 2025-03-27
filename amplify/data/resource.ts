@@ -49,6 +49,7 @@ const schema = a
     ProjectTechnology: a
       .model({
         name: a.string().required(),
+        description: a.string(),
         projects: a.hasMany("ProjectTechnologyLink", "technologyId"),
       })
       .authorization((allow) => [allow.authenticated()]),
