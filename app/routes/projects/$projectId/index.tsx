@@ -44,6 +44,16 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
           "startDate",
           "endDate",
           "technologies.*",
+          "assignments.id",
+          "assignments.accountId",
+          "assignments.startDate",
+          "assignments.endDate",
+          "assignments.account.id",
+          "assignments.account.name",
+          "assignments.account.email",
+          "assignments.account.photo",
+          "assignments.account.organizationLine",
+          "assignments.account.residence",
         ],
       },
     );
@@ -223,6 +233,55 @@ export default function ProjectDetails({
           </div>
         )}
       </div>
+
+      {/* アサイン済みアカウントセクション */}
+      {project.assignments && project.assignments.length > 0 && (
+        <div className="bg-white rounded-lg shadow-md p-6 mt-6">
+          <h2 className="text-xl font-bold mb-4">アサイン済みアカウント</h2>
+          <div className="space-y-4">
+            {project.assignments.map((assignment) => {
+              const startDate = formatDate(assignment.startDate);
+              const endDate = formatDate(assignment.endDate);
+              const account = assignment.account;
+
+              return (
+                <div
+                  key={assignment.id}
+                  className="border-b pb-4 last:border-b-0 hover:bg-gray-50 cursor-pointer"
+                  onClick={() => navigate(`/accounts/${account.id}`)}
+                >
+                  <div className="flex flex-col md:flex-row justify-between">
+                    <div className="flex items-center">
+                      <div className="w-10 h-10 bg-gray-200 rounded-full flex-shrink-0 mr-3 overflow-hidden">
+                        {account.photo ? (
+                          <img
+                            src={account.photo}
+                            alt={`${account.name}の写真`}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-gray-400 text-white">
+                            {account.name.charAt(0)}
+                          </div>
+                        )}
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-medium">{account.name}</h3>
+                        <p className="text-sm text-gray-600">
+                          {account.organizationLine}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-sm text-gray-500 mt-2 md:mt-0 md:self-center">
+                      {startDate} {endDate !== "-" ? `〜 ${endDate}` : "から"}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* 削除確認ダイアログ */}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
