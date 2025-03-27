@@ -1,7 +1,17 @@
-import { useNavigate } from "react-router";
+import { redirect, useFetcher, useNavigate } from "react-router";
+import { useState, useEffect } from "react";
 import { client } from "~/lib/amplify-client";
 import { Button } from "~/components/ui/button";
 import { Badge } from "~/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "~/components/ui/dialog";
+import { useToast } from "~/components/ui/use-toast";
 import type { Route } from "./+types/index";
 import type { Schema } from "amplify/data/resource";
 
@@ -65,17 +75,72 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   }
 }
 
-export default function ProjectDetails({ loaderData }: Route.ComponentProps) {
+export async function clientAction({ params }: Route.ClientActionArgs) {
+  try {
+    const projectId = params.projectId;
+
+    const { data: project } = await client.models.Project.get(
+      {
+        id: projectId,
+      },
+      {
+        selectionSet: ["id", "technologies.*"],
+      },
+    );
+
+    if (!project) {
+      return { error: "Project not found" };
+    }
+
+    for (const techLink of project.technologies) {
+      await client.models.ProjectTechnologyLink.delete({
+        id: techLink.id,
+      });
+    }
+
+    await client.models.Project.delete({
+      id: projectId,
+    });
+
+    return redirect("/projects");
+  } catch (err) {
+    console.error("Error deleting project:", err);
+    return {
+      error: err instanceof Error ? err.message : "Unknown error occurred",
+    };
+  }
+}
+
+export default function ProjectDetails({
+  loaderData,
+  actionData,
+}: Route.ComponentProps) {
   const { project, technologies, error } = loaderData || {
     project: null,
     technologies: [],
     error: undefined,
   };
+  const fetcher = useFetcher();
   const navigate = useNavigate();
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const { error: deleteError } = actionData || {
+    error: undefined,
+  };
+  const { toast } = useToast();
 
   const formatDate = (dateString?: string | null) => {
     return dateString ? new Date(dateString).toLocaleDateString() : "-";
   };
+
+  useEffect(() => {
+    if (deleteError) {
+      toast({
+        variant: "destructive",
+        title: "削除エラー",
+        description: deleteError,
+      });
+    }
+  }, [deleteError, toast]);
 
   if (error) {
     return (
@@ -112,6 +177,12 @@ export default function ProjectDetails({ loaderData }: Route.ComponentProps) {
           </Button>
           <Button onClick={() => navigate(`/projects/${project.id}/edit`)}>
             Edit Project
+          </Button>
+          <Button
+            variant="destructive"
+            onClick={() => setDeleteDialogOpen(true)}
+          >
+            削除
           </Button>
         </div>
       </div>
@@ -152,6 +223,31 @@ export default function ProjectDetails({ loaderData }: Route.ComponentProps) {
           </div>
         )}
       </div>
+
+      {/* 削除確認ダイアログ */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>プロジェクトを削除しますか？</DialogTitle>
+            <DialogDescription>
+              この操作は元に戻せません。このプロジェクトとそれに関連するすべての技術リンクが削除されます。
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="mt-4 flex justify-end gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setDeleteDialogOpen(false)}
+            >
+              キャンセル
+            </Button>
+            <fetcher.Form method="delete">
+              <Button type="submit" variant="destructive">
+                削除する
+              </Button>
+            </fetcher.Form>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
