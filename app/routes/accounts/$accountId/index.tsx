@@ -136,9 +136,11 @@ export default function AccountDetails({ loaderData }: Route.ComponentProps) {
               const startDate = new Date(
                 assignment.startDate,
               ).toLocaleDateString("ja-JP");
-              const endDate = new Date(assignment.endDate).toLocaleDateString(
-                "ja-JP",
-              );
+
+              const endDateDisplay = assignment.endDate
+                ? new Date(assignment.endDate).toLocaleDateString("ja-JP")
+                : "設定なし";
+
               return (
                 <div
                   key={assignment.id}
@@ -156,7 +158,8 @@ export default function AccountDetails({ loaderData }: Route.ComponentProps) {
                     <div className="text-right">
                       <p className="text-sm">
                         <span className="text-gray-500">期間: </span>
-                        {startDate} 〜 {endDate}
+                        {startDate}{" "}
+                        {assignment.endDate ? `〜 ${endDateDisplay}` : "から"}
                       </p>
                     </div>
                   </div>

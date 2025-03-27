@@ -150,7 +150,7 @@ interface ProjectAssignmentSelectorProps {
 interface Assignment {
   projectId: string;
   startDate: string;
-  endDate: string;
+  endDate?: string;
 }
 
 function ProjectAssignmentSelector({
@@ -267,7 +267,7 @@ function ProjectAssignmentSelector({
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      終了日 *
+                      終了日
                     </label>
                     <Input
                       type="date"
@@ -279,7 +279,6 @@ function ProjectAssignmentSelector({
                           e.target.value,
                         )
                       }
-                      required
                     />
                   </div>
                 </div>

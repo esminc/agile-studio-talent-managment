@@ -16,7 +16,7 @@ export async function updateProjectAssignments({
   projectAssignments: {
     projectId: string;
     startDate: string;
-    endDate: string;
+    endDate?: string;
   }[];
 }) {
   const currentAssignments = account.assignments || [];
@@ -49,7 +49,7 @@ export async function updateProjectAssignments({
         await client.models.ProjectAssignment.update({
           id: existingAssignment.id,
           startDate: pa.startDate,
-          endDate: pa.endDate,
+          endDate: pa.endDate || undefined,
         });
       }
     } else {
@@ -57,7 +57,7 @@ export async function updateProjectAssignments({
         accountId: account.id,
         projectId: pa.projectId,
         startDate: pa.startDate,
-        endDate: pa.endDate,
+        endDate: pa.endDate || undefined,
       });
     }
   }

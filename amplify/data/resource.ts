@@ -59,7 +59,7 @@ const schema = a
         projectId: a.id().required(),
         accountId: a.id().required(),
         startDate: a.date().required(),
-        endDate: a.date().required(),
+        endDate: a.date(),
         project: a.belongsTo("Project", "projectId"),
         account: a.belongsTo("Account", "accountId"),
       })
