@@ -11,6 +11,8 @@ export default [
     index("routes/home.tsx"),
     route("accounts", "routes/accounts.tsx"),
     route("accounts/new", "routes/accounts/new.tsx"),
+    route("accounts/:accountId", "routes/accounts/$accountId/index.tsx"),
+    route("accounts/:accountId/edit", "routes/accounts/$accountId/edit.tsx"),
     route("projects", "routes/projects.tsx"),
     route("projects/new", "routes/projects/new.tsx"),
     route("projects/:projectId", "routes/projects/$projectId/index.tsx"),

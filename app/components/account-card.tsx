@@ -3,13 +3,17 @@ import type { Schema } from "../../amplify/data/resource";
 
 interface AccountCardProps {
   account: Account;
+  onClick?: () => void;
 }
 
 type Account = Schema["Account"]["type"];
 
-export function AccountCard({ account }: AccountCardProps) {
+export function AccountCard({ account, onClick }: AccountCardProps) {
   return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden">
+    <div
+      className="bg-white rounded-lg shadow-md overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
+      onClick={onClick}
+    >
       <div className="h-40 bg-gray-200 flex items-center justify-center">
         {account.photo ? (
           <img
