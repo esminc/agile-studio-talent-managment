@@ -14,8 +14,6 @@ describe("Home", () => {
 
     render(<Stub initialEntries={["/"]} />);
 
-    expect(
-      await screen.findByAltText("Agile Studio Logo"),
-    ).toBeInTheDocument();
+    expect(await screen.findByAltText("Agile Studio Logo")).toBeInTheDocument();
   });
 });
