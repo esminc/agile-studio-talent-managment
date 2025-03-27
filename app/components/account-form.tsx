@@ -4,13 +4,6 @@ import { Input } from "../components/ui/input";
 import type { Schema } from "../../amplify/data/resource";
 import { useState } from "react";
 import { MultiSelect } from "./ui/multi-select";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "./ui/select";
 
 export interface AccountFormProps {
   error?: Error | null;
@@ -192,9 +185,9 @@ function ProjectAssignmentSelector({
       { projectId, startDate: today, endDate: today },
     ]);
   };
-  
+
   const projectIdToNameMap = Object.fromEntries(
-    projects.map((project) => [project.id, project.name])
+    projects.map((project) => [project.id, project.name]),
   );
 
   const handleProjectRemove = (projectId: string) => {
@@ -245,7 +238,10 @@ function ProjectAssignmentSelector({
         <div className="space-y-4">
           {assignments.map((assignment) => {
             const project = projects.find((p) => p.id === assignment.projectId);
-            const projectName = project?.name || projectIdToNameMap[assignment.projectId] || "不明なプロジェクト";
+            const projectName =
+              project?.name ||
+              projectIdToNameMap[assignment.projectId] ||
+              "不明なプロジェクト";
             return (
               <div
                 key={assignment.projectId}
