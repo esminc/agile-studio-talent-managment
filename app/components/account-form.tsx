@@ -182,13 +182,9 @@ function ProjectAssignmentSelector({
     const today = new Date().toISOString().split("T")[0];
     setAssignments([
       ...assignments,
-      { projectId, startDate: today, endDate: today },
+      { projectId, startDate: today, endDate: undefined },
     ]);
   };
-
-  const projectIdToNameMap = Object.fromEntries(
-    projects.map((project) => [project.id, project.name]),
-  );
 
   const handleProjectRemove = (projectId: string) => {
     setAssignments(assignments.filter((a) => a.projectId !== projectId));
@@ -238,10 +234,7 @@ function ProjectAssignmentSelector({
         <div className="space-y-4">
           {assignments.map((assignment) => {
             const project = projects.find((p) => p.id === assignment.projectId);
-            const projectName =
-              project?.name ||
-              projectIdToNameMap[assignment.projectId] ||
-              "不明なプロジェクト";
+            const projectName = project?.name || "不明なプロジェクト";
             return (
               <div
                 key={assignment.projectId}
