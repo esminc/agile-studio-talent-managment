@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router";
+import { redirect, useFetcher, useNavigate } from "react-router";
 import { useState, useEffect } from "react";
 import { client } from "~/lib/amplify-client";
 import { Button } from "~/components/ui/button";
@@ -102,7 +102,7 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
       id: projectId,
     });
 
-    return { success: true };
+    return redirect("/projects");
   } catch (err) {
     console.error("Error deleting project:", err);
     return {
@@ -120,11 +120,10 @@ export default function ProjectDetails({
     technologies: [],
     error: undefined,
   };
+  const fetcher = useFetcher();
   const navigate = useNavigate();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [, setIsDeleting] = useState(false);
-  const { success, error: deleteError } = actionData || {
-    success: false,
+  const { error: deleteError } = actionData || {
     error: undefined,
   };
   const { toast } = useToast();
@@ -132,12 +131,6 @@ export default function ProjectDetails({
   const formatDate = (dateString?: string | null) => {
     return dateString ? new Date(dateString).toLocaleDateString() : "-";
   };
-
-  useEffect(() => {
-    if (success) {
-      navigate("/projects");
-    }
-  }, [success, navigate]);
 
   useEffect(() => {
     if (deleteError) {
@@ -148,26 +141,6 @@ export default function ProjectDetails({
       });
     }
   }, [deleteError, toast]);
-
-  async function handleDeleteProject() {
-    setDeleteDialogOpen(false);
-    setIsDeleting(true);
-    try {
-      await fetch(`/projects/${project?.id}`, { method: "DELETE" });
-    } catch (err) {
-      const errorMessage =
-        err instanceof Error
-          ? err.message
-          : "削除中に予期せぬエラーが発生しました";
-      toast({
-        variant: "destructive",
-        title: "削除エラー",
-        description: errorMessage,
-      });
-    } finally {
-      setIsDeleting(false);
-    }
-  }
 
   if (error) {
     return (
@@ -267,9 +240,11 @@ export default function ProjectDetails({
             >
               キャンセル
             </Button>
-            <Button variant="destructive" onClick={handleDeleteProject}>
-              削除する
-            </Button>
+            <fetcher.Form method="delete">
+              <Button type="submit" variant="destructive">
+                削除する
+              </Button>
+            </fetcher.Form>
           </DialogFooter>
         </DialogContent>
       </Dialog>
