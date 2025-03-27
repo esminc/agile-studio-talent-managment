@@ -4,7 +4,7 @@ import { describe, expect, test } from "vitest";
 import Home from "./home";
 
 describe("Home", () => {
-  test("React Router DocsとDiscordへのリンクが表示されること", async () => {
+  test("Agile Studio Logoが表示されること", async () => {
     const Stub = createRoutesStub([
       {
         path: "/",
@@ -14,11 +14,6 @@ describe("Home", () => {
 
     render(<Stub initialEntries={["/"]} />);
 
-    expect(
-      await screen.findByRole("link", { name: "React Router Docs" }),
-    ).toBeInTheDocument();
-    expect(
-      await screen.findByRole("link", { name: "Join Discord" }),
-    ).toBeInTheDocument();
+    expect(await screen.findByAltText("Agile Studio Logo")).toBeInTheDocument();
   });
 });
