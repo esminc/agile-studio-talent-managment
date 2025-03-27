@@ -94,12 +94,20 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
         id: projectId,
       },
       {
-        selectionSet: ["id", "technologies.*"],
+        selectionSet: ["id", "technologies.*", "assignments.*"],
       },
     );
 
     if (!project) {
       return { error: "Project not found" };
+    }
+
+    if (project.assignments && project.assignments.length > 0) {
+      for (const assignment of project.assignments) {
+        await client.models.ProjectAssignment.delete({
+          id: assignment.id,
+        });
+      }
     }
 
     for (const techLink of project.technologies) {
@@ -289,7 +297,7 @@ export default function ProjectDetails({
           <DialogHeader>
             <DialogTitle>プロジェクトを削除しますか？</DialogTitle>
             <DialogDescription>
-              この操作は元に戻せません。このプロジェクトとそれに関連するすべての技術リンクが削除されます。
+              この操作は元に戻せません。このプロジェクトとそれに関連するすべての技術リンクとアサインメントが削除されます。
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="mt-4 flex justify-end gap-2">
