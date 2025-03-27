@@ -26,12 +26,15 @@ export const handler: PostConfirmationTriggerHandler = async (event) => {
     console.log("Account already exists", accounts[0]);
     return event;
   }
+  const sub = event.request.userAttributes.sub;
+  const userName = event.userName;
   await client.models.Account.create({
     email: event.request.userAttributes.email,
     name:
       event.request.userAttributes.name ?? event.request.userAttributes.email,
     organizationLine: "",
     residence: "",
+    owner: `${sub}::${userName}`,
   });
   return event;
 };
