@@ -17,5 +17,9 @@ export default [
     route("projects/:projectId/edit", "routes/projects/$projectId/edit.tsx"),
     route("project-technologies", "routes/project-technologies.tsx"),
     route("project-technologies/new", "routes/project-technologies/new.tsx"),
+    route(
+      "project-technologies/:projectTechnologyId/edit",
+      "routes/project-technologies/$projectTechnologyId/edit.tsx",
+    ),
   ]),
 ] satisfies RouteConfig;
