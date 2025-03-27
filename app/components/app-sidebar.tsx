@@ -4,6 +4,7 @@ import { Link } from "react-router";
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
@@ -11,6 +12,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "~/components/ui/sidebar";
+import { NavUser } from "./nav-user";
 
 // Menu items.
 const items = [
@@ -41,7 +43,11 @@ const items = [
   },
 ];
 
-export function AppSidebar() {
+export function AppSidebar({
+  account,
+}: {
+  account: { name: string; email: string; photo?: string | null };
+}) {
   return (
     <Sidebar>
       <SidebarContent>
@@ -56,10 +62,6 @@ export function AppSidebar() {
                       <item.icon />
                       <span>{item.title}</span>
                     </Link>
-                    {/* <a href={item.url}>
-                      <item.icon />
-                      <span>{item.title}</span>
-                    </a> */}
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
@@ -67,6 +69,9 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+      <SidebarFooter>
+        <NavUser user={account} />
+      </SidebarFooter>
     </Sidebar>
   );
 }

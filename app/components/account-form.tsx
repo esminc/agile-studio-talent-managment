@@ -34,6 +34,16 @@ export function AccountForm({ error, onCancel }: AccountFormProps) {
 
         <div className="mb-4">
           <label
+            htmlFor="email"
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
+            Email *
+          </label>
+          <Input id="email" name="email" type="email" required />
+        </div>
+
+        <div className="mb-4">
+          <label
             htmlFor="photo"
             className="block text-sm font-medium text-gray-700 mb-1"
           >

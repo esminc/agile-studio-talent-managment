@@ -16,6 +16,7 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
   const formData = await request.formData();
 
   const name = formData.get("name") as string;
+  const email = formData.get("email") as string;
   const photo = formData.get("photo") as string;
   const organizationLine = formData.get("organizationLine") as string;
   const residence = formData.get("residence") as string;
@@ -27,6 +28,7 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
   // Create the account with the Amplify client
   const { data, errors } = await client.models.Account.create({
     name,
+    email,
     photo: photo || undefined,
     organizationLine,
     residence,

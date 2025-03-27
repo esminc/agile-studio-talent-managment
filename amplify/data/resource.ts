@@ -1,4 +1,5 @@
 import { type ClientSchema, a, defineData } from "@aws-amplify/backend";
+import { postConfirmation } from "../auth/post-confirmation/resource";
 
 /*== STEP 1 ===============================================================
 The section below creates a Todo database table with a "content" field. Try
@@ -6,72 +7,76 @@ adding a new "isDone" field as a boolean. The authorization rule below
 specifies that any unauthenticated user can "create", "read", "update", 
 and "delete" any "Todo" records.
 =========================================================================*/
-const schema = a.schema({
-  Todo: a
-    .model({
-      content: a.string(),
-    })
-    .authorization((allow) => [allow.guest()]),
+const schema = a
+  .schema({
+    Todo: a
+      .model({
+        content: a.string(),
+      })
+      .authorization((allow) => [allow.guest()]),
 
-  Account: a
-    .model({
-      name: a.string().required(),
-      photo: a.string(), // URL to photo
-      organizationLine: a.string().required(),
-      residence: a.string().required(),
-      assignments: a.hasMany("ProjectAssignment", "accountId"),
-    })
-    .authorization((allow) => [
-      allow.authenticated().to(["read"]),
-      allow.owner().to(["create", "update", "delete"]),
-      allow.group("Admin").to(["create", "update", "delete"]),
-    ]),
+    Account: a
+      .model({
+        name: a.string().required(),
+        email: a.email().required(),
+        photo: a.string(), // URL to photo
+        organizationLine: a.string().required(),
+        residence: a.string().required(),
+        assignments: a.hasMany("ProjectAssignment", "accountId"),
+      })
+      .secondaryIndexes((index) => [index("email")])
+      .authorization((allow) => [
+        allow.authenticated().to(["read"]),
+        allow.owner().to(["create", "update", "delete"]),
+        allow.group("Admin").to(["create", "update", "delete"]),
+      ]),
 
-  Project: a
-    .model({
-      name: a.string().required(),
-      clientName: a.string().required(),
-      overview: a.string().required(),
-      startDate: a.date().required(),
-      endDate: a.date(),
-      assignments: a.hasMany("ProjectAssignment", "projectId"),
-      technologies: a.hasMany("ProjectTechnologyLink", "projectId"),
-    })
-    .authorization((allow) => [
-      allow.authenticated().to(["read"]),
-      allow.group("Admin").to(["create", "update", "delete"]),
-    ]),
+    Project: a
+      .model({
+        name: a.string().required(),
+        clientName: a.string().required(),
+        overview: a.string().required(),
+        startDate: a.date().required(),
+        endDate: a.date(),
+        assignments: a.hasMany("ProjectAssignment", "projectId"),
+        technologies: a.hasMany("ProjectTechnologyLink", "projectId"),
+      })
+      .authorization((allow) => [
+        allow.authenticated().to(["read"]),
+        allow.group("Admin").to(["create", "update", "delete"]),
+      ]),
 
-  ProjectTechnology: a
-    .model({
-      name: a.string().required(),
-      projects: a.hasMany("ProjectTechnologyLink", "technologyId"),
-    })
-    .authorization((allow) => [allow.authenticated()]),
+    ProjectTechnology: a
+      .model({
+        name: a.string().required(),
+        projects: a.hasMany("ProjectTechnologyLink", "technologyId"),
+      })
+      .authorization((allow) => [allow.authenticated()]),
 
-  ProjectAssignment: a
-    .model({
-      projectId: a.id().required(),
-      accountId: a.id().required(),
-      startDate: a.date().required(),
-      endDate: a.date().required(),
-      project: a.belongsTo("Project", "projectId"),
-      account: a.belongsTo("Account", "accountId"),
-    })
-    .authorization((allow) => [
-      allow.authenticated().to(["read"]),
-      allow.group("Admin").to(["create", "update", "delete"]),
-    ]),
+    ProjectAssignment: a
+      .model({
+        projectId: a.id().required(),
+        accountId: a.id().required(),
+        startDate: a.date().required(),
+        endDate: a.date().required(),
+        project: a.belongsTo("Project", "projectId"),
+        account: a.belongsTo("Account", "accountId"),
+      })
+      .authorization((allow) => [
+        allow.authenticated().to(["read"]),
+        allow.group("Admin").to(["create", "update", "delete"]),
+      ]),
 
-  ProjectTechnologyLink: a
-    .model({
-      projectId: a.id().required(),
-      technologyId: a.id().required(),
-      project: a.belongsTo("Project", "projectId"),
-      technology: a.belongsTo("ProjectTechnology", "technologyId"),
-    })
-    .authorization((allow) => [allow.authenticated()]),
-});
+    ProjectTechnologyLink: a
+      .model({
+        projectId: a.id().required(),
+        technologyId: a.id().required(),
+        project: a.belongsTo("Project", "projectId"),
+        technology: a.belongsTo("ProjectTechnology", "technologyId"),
+      })
+      .authorization((allow) => [allow.authenticated()]),
+  })
+  .authorization((allow) => [allow.resource(postConfirmation)]);
 
 export type Schema = ClientSchema<typeof schema>;
 
