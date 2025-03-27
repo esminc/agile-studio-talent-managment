@@ -18,6 +18,7 @@ export async function clientAction({ request }: { request: Request }) {
   const formData = await request.formData();
 
   const name = formData.get("name") as string;
+  const description = formData.get("description") as string;
 
   if (!name) {
     return { error: "Name is required" };
@@ -26,6 +27,7 @@ export async function clientAction({ request }: { request: Request }) {
   // Create the project technology with the Amplify client
   const { data, errors } = await client.models.ProjectTechnology.create({
     name,
+    description,
   });
 
   return {

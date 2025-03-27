@@ -26,7 +26,7 @@ export function meta() {
 export async function clientLoader() {
   try {
     const { data } = await client.models.ProjectTechnology.list({
-      selectionSet: ["id", "name", "projects.*"],
+      selectionSet: ["id", "name", "description", "projects.*"],
     });
     return { projectTechnologies: data };
   } catch (err) {
@@ -75,6 +75,7 @@ export default function ProjectTechnologies({
           <TableHeader>
             <TableRow>
               <TableHead>Name</TableHead>
+              <TableHead>Description</TableHead>
               <TableHead>Projects Count</TableHead>
             </TableRow>
           </TableHeader>
@@ -82,6 +83,7 @@ export default function ProjectTechnologies({
             {projectTechnologies.map((technology) => (
               <TableRow key={technology.id}>
                 <TableCell className="font-medium">{technology.name}</TableCell>
+                <TableCell>{technology.description}</TableCell>
                 <TableCell>{technology.projects.length}</TableCell>
               </TableRow>
             ))}
