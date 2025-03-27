@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { AccountForm } from "~/components/account-form";
 import { client } from "~/lib/amplify-client";
 import type { Route } from "./+types/edit";
+import { updateProjectAssignments } from "~/lib/account";
 
 export function meta() {
   return [
@@ -26,6 +27,10 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
           "photo",
           "organizationLine",
           "residence",
+          "assignments.id",
+          "assignments.projectId",
+          "assignments.startDate",
+          "assignments.endDate",
         ],
       },
     );
@@ -34,8 +39,13 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
       return { error: "Account not found" };
     }
 
+    const { data: projects } = await client.models.Project.list({
+      selectionSet: ["id", "name", "clientName", "startDate", "endDate"],
+    });
+
     return {
       account,
+      projects,
     };
   } catch (err) {
     console.error("Error fetching account:", err);
@@ -57,6 +67,7 @@ export async function clientAction({
   const photo = formData.get("photo") as string;
   const organizationLine = formData.get("organizationLine") as string;
   const residence = formData.get("residence") as string;
+  const projectAssignmentsJson = formData.get("projectAssignments") as string;
 
   if (!name || !organizationLine || !residence) {
     return { error: "Name, Organization Line, and Residence are required" };
@@ -80,12 +91,25 @@ export async function clientAction({
           "photo",
           "organizationLine",
           "residence",
+          "assignments.id",
+          "assignments.projectId",
+          "assignments.startDate",
+          "assignments.endDate",
         ],
       },
     );
 
     if (errors) {
       return { error: errors.map((error) => error.message).join(", ") };
+    }
+
+    if (projectAssignmentsJson) {
+      const projectAssignments = JSON.parse(projectAssignmentsJson);
+
+      await updateProjectAssignments({
+        account: updatedAccount,
+        projectAssignments,
+      });
     }
 
     return {
@@ -105,8 +129,13 @@ export default function EditAccount({
   actionData,
 }: Route.ComponentProps) {
   const navigate = useNavigate();
-  const { account, error: loadError } = loaderData || {
+  const {
+    account,
+    projects = [],
+    error: loadError,
+  } = loaderData || {
     account: null,
+    projects: [],
     error: undefined,
   };
 
@@ -162,6 +191,8 @@ export default function EditAccount({
           error={actionError ? new Error(actionError) : null}
           onCancel={() => navigate(`/accounts/${account.id}`)}
           account={account}
+          projects={projects}
+          projectAssignments={account.assignments}
         />
       </div>
     </div>

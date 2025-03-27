@@ -25,6 +25,13 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
           "photo",
           "organizationLine",
           "residence",
+          "assignments.id",
+          "assignments.projectId",
+          "assignments.startDate",
+          "assignments.endDate",
+          "assignments.project.id",
+          "assignments.project.name",
+          "assignments.project.clientName",
         ],
       },
     );
@@ -120,6 +127,48 @@ export default function AccountDetails({ loaderData }: Route.ComponentProps) {
           </div>
         </div>
       </div>
+
+      {account.assignments && account.assignments.length > 0 && (
+        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+          <h2 className="text-xl font-bold mb-4">プロジェクトアサインメント</h2>
+          <div className="space-y-3">
+            {account.assignments.map((assignment) => {
+              const startDate = new Date(
+                assignment.startDate,
+              ).toLocaleDateString("ja-JP");
+
+              const endDateDisplay = assignment.endDate
+                ? new Date(assignment.endDate).toLocaleDateString("ja-JP")
+                : "設定なし";
+
+              return (
+                <div
+                  key={assignment.id}
+                  className="border-b pb-3 last:border-b-0"
+                >
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="font-semibold text-lg">
+                        {assignment.project?.name || "不明なプロジェクト"}
+                      </h3>
+                      <p className="text-gray-600 text-sm">
+                        {assignment.project?.clientName}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm">
+                        <span className="text-gray-500">期間: </span>
+                        {startDate}{" "}
+                        {assignment.endDate ? `〜 ${endDateDisplay}` : "から"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
