@@ -32,9 +32,9 @@ export async function updateProjectAssignments({
     });
   }
 
-  const currentProjectIds = currentAssignments.map(
-    (assignment) => assignment.projectId,
-  );
+  // const currentProjectIds = currentAssignments.map(
+  //   (assignment) => assignment.projectId,
+  // );
 
   for (const pa of projectAssignments) {
     const existingAssignment = currentAssignments.find(
