@@ -28,13 +28,18 @@ export const handler: PostConfirmationTriggerHandler = async (event) => {
   }
   const sub = event.request.userAttributes.sub;
   const userName = event.userName;
-  await client.models.Account.create({
-    email: event.request.userAttributes.email,
-    name:
-      event.request.userAttributes.name ?? event.request.userAttributes.email,
-    organizationLine: "",
-    residence: "",
-    owner: `${sub}::${userName}`,
-  });
+  const { data: account, errors: createErrors } =
+    await client.models.Account.create({
+      email: event.request.userAttributes.email,
+      name:
+        event.request.userAttributes.name ?? event.request.userAttributes.email,
+      organizationLine: "",
+      residence: "",
+      owner: `${sub}::${userName}`,
+    });
+  if (createErrors) {
+    console.error("Error creating account", createErrors);
+  }
+  console.log("Created account", account);
   return event;
 };
