@@ -82,7 +82,16 @@ export default function ProjectTechnologies({
           <TableBody>
             {projectTechnologies.map((technology) => (
               <TableRow key={technology.id}>
-                <TableCell className="font-medium">{technology.name}</TableCell>
+                <TableCell className="font-medium">
+                  <button
+                    onClick={() =>
+                      navigate(`/project-technologies/${technology.id}/edit`)
+                    }
+                    className="hover:underline text-blue-600"
+                  >
+                    {technology.name}
+                  </button>
+                </TableCell>
                 <TableCell>{technology.description}</TableCell>
                 <TableCell>{technology.projects.length}</TableCell>
               </TableRow>
