@@ -23,6 +23,7 @@ const schema = a
         organizationLine: a.string().required(),
         residence: a.string().required(),
         assignments: a.hasMany("ProjectAssignment", "accountId"),
+        owner: a.string(),
       })
       .secondaryIndexes((index) => [index("email")])
       .authorization((allow) => [
