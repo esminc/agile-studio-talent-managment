@@ -5,6 +5,15 @@ import { Button } from "../components/ui/button";
 import { AccountCard } from "../components/account-card";
 import { client } from "../lib/amplify-client";
 import { useNavigate } from "react-router";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "../components/ui/dialog";
+import { parse } from "csv-parse/browser/esm";
+import { CSVImportForm } from "../components/csv-import-form";
 
 export function meta() {
   return [
@@ -15,10 +24,101 @@ export function meta() {
 
 type Account = Schema["Account"]["type"];
 
+export async function clientAction({ request }: { request: Request }) {
+  const formData = await request.formData();
+  const csvFile = formData.get("csvFile") as File;
+
+  if (!csvFile) {
+    return { error: "CSVファイルが必要です" };
+  }
+
+  try {
+    const text = await csvFile.text();
+
+    const parseCSV = () => {
+      return new Promise<Array<Record<string, string>>>((resolve, reject) => {
+        parse(
+          text,
+          {
+            columns: true,
+            skip_empty_lines: true,
+            trim: true,
+          },
+          (err, records) => {
+            if (err) {
+              reject(err);
+            } else {
+              resolve(records);
+            }
+          },
+        );
+      });
+    };
+
+    const records = await parseCSV();
+
+    const results = {
+      success: 0,
+      errors: [] as string[],
+    };
+
+    for (let i = 0; i < records.length; i++) {
+      const record = records[i];
+
+      if (
+        !record.name ||
+        !record.email ||
+        !record.organizationLine ||
+        !record.residence
+      ) {
+        results.errors.push(
+          `行 ${i + 1}: 名前、メール、組織、居住地は必須です`,
+        );
+        continue;
+      }
+
+      try {
+        const { errors } = await client.models.Account.create({
+          name: record.name,
+          email: record.email,
+          photo: record.photo || undefined,
+          organizationLine: record.organizationLine,
+          residence: record.residence,
+        });
+
+        if (errors) {
+          results.errors.push(
+            `行 ${i + 1}: ${errors.map((err) => err.message).join(", ")}`,
+          );
+        } else {
+          results.success++;
+        }
+      } catch (error) {
+        results.errors.push(
+          `行 ${i + 1}: ${error instanceof Error ? error.message : "不明なエラー"}`,
+        );
+      }
+    }
+
+    return {
+      results,
+    };
+  } catch (error) {
+    return {
+      error: `CSVの処理中にエラーが発生しました: ${error instanceof Error ? error.message : "不明なエラー"}`,
+    };
+  }
+}
+
 export default function Accounts() {
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const [importResults, setImportResults] = useState<{
+    success: number;
+    errors: string[];
+  } | null>(null);
+  const [importError, setImportError] = useState<string | null>(null);
   const navigate = useNavigate();
   const handleAccountClick = (accountId: string) => {
     navigate(`/accounts/${accountId}`);
@@ -48,10 +148,59 @@ export default function Accounts() {
     <div className="container mx-auto p-4">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Accounts</h1>
-        <Button onClick={() => navigate("/accounts/new")}>Add Account</Button>
+        <div className="flex gap-2">
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="outline">CSVからインポート</Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>CSVからアカウントをインポート</DialogTitle>
+              </DialogHeader>
+              <CSVImportForm
+                onSuccess={(results) => {
+                  setImportResults(results);
+                  setImportError(null);
+                  fetchAccounts(); // 成功したら一覧を更新
+                }}
+                onError={(error) => {
+                  setImportError(error);
+                  setImportResults(null);
+                }}
+              />
+            </DialogContent>
+          </Dialog>
+          <Button onClick={() => navigate("/accounts/new")}>Add Account</Button>
+        </div>
       </div>
 
-      {/* Inline form removed */}
+      {importError && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+          エラー: {importError}
+        </div>
+      )}
+
+      {importResults && (
+        <div
+          className={`px-4 py-3 rounded mb-4 ${importResults.errors.length > 0 ? "bg-yellow-100 border border-yellow-400 text-yellow-700" : "bg-green-100 border border-green-400 text-green-700"}`}
+        >
+          <p>
+            {importResults.success}件のアカウントが正常にインポートされました。
+          </p>
+          {importResults.errors.length > 0 && (
+            <>
+              <p className="font-bold mt-2">
+                {importResults.errors.length}件のエラーがありました:
+              </p>
+              <ul className="list-disc pl-5 mt-1">
+                {importResults.errors.map((err, idx) => (
+                  <li key={idx}>{err}</li>
+                ))}
+              </ul>
+            </>
+          )}
+        </div>
+      )}
 
       {error && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
