@@ -1,18 +1,17 @@
 import { useNavigate } from "react-router";
 import { useEffect } from "react";
 import { Button } from "~/components/ui/button";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "~/components/ui/alert-dialog";
 import { client } from "~/lib/amplify-client";
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "~/components/ui/table";
+import { ProjectTechnologyDeleteDialog } from "~/components/project-technology-delete-dialog";
 import type { Route } from "./+types/index";
 
 export function meta() {
@@ -145,33 +144,9 @@ export default function ProjectTechnologyDetails({
           >
             Edit
           </Button>
-
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button variant="destructive">Delete</Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  This action cannot be undone. This will permanently delete the
-                  technology and remove it from all associated projects.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <form method="post">
-                  <input type="hidden" name="action" value="delete" />
-                  <AlertDialogAction
-                    type="submit"
-                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                  >
-                    Delete
-                  </AlertDialogAction>
-                </form>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+          <ProjectTechnologyDeleteDialog
+            projectTechnologyId={projectTechnology.id}
+          />
         </div>
       </div>
 
@@ -197,61 +172,40 @@ export default function ProjectTechnologyDetails({
         <h2 className="text-lg font-semibold mb-4">Related Projects</h2>
         {projectTechnology.projects && projectTechnology.projects.length > 0 ? (
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                  >
-                    Project Name
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                  >
-                    Client
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                  >
-                    Start Date
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                  >
-                    End Date
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+            <Table>
+              <TableCaption>Projects using this technology</TableCaption>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Project Name</TableHead>
+                  <TableHead>Client</TableHead>
+                  <TableHead>Start Date</TableHead>
+                  <TableHead>End Date</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {projectTechnology.projects.map((link) => (
-                  <tr key={link.id}>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                  <TableRow key={link.id}>
+                    <TableCell className="font-medium">
                       <button
                         onClick={() => navigate(`/projects/${link.project.id}`)}
                         className="text-blue-600 hover:underline"
                       >
                         {link.project.name}
                       </button>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {link.project.clientName}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    </TableCell>
+                    <TableCell>{link.project.clientName}</TableCell>
+                    <TableCell>
                       {new Date(link.project.startDate).toLocaleDateString()}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    </TableCell>
+                    <TableCell>
                       {link.project.endDate
                         ? new Date(link.project.endDate).toLocaleDateString()
                         : "Ongoing"}
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
         ) : (
           <p className="text-gray-500">
