@@ -1,5 +1,17 @@
 import { useNavigate } from "react-router";
+import { useEffect } from "react";
 import { Button } from "~/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "~/components/ui/alert-dialog";
 import { client } from "~/lib/amplify-client";
 import type { Route } from "./+types/index";
 
@@ -41,20 +53,59 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   }
 }
 
+export async function clientAction({
+  request,
+  params,
+}: Route.ClientActionArgs) {
+  const formData = await request.formData();
+  const action = formData.get("action") as string;
+  const projectTechnologyId = params.projectTechnologyId;
+
+  if (action === "delete") {
+    try {
+      await client.models.ProjectTechnology.delete({
+        id: projectTechnologyId,
+      });
+
+      return { success: true };
+    } catch (err) {
+      console.error("Error deleting project technology:", err);
+      return {
+        error: err instanceof Error ? err.message : "Unknown error occurred",
+      };
+    }
+  }
+
+  return { error: "Invalid action" };
+}
+
 export default function ProjectTechnologyDetails({
   loaderData,
+  actionData,
+  navigate: navigateFunc,
 }: Route.ComponentProps) {
-  const navigate = useNavigate();
+  const navigate = navigateFunc || useNavigate();
   const { projectTechnology, error } = loaderData || {
     projectTechnology: null,
     error: undefined,
   };
 
-  if (error) {
+  const { success, error: actionError } = actionData || {
+    success: false,
+    error: undefined,
+  };
+
+  useEffect(() => {
+    if (success) {
+      navigate("/project-technologies");
+    }
+  }, [success, navigate]);
+
+  if (error || actionError) {
     return (
       <div className="container mx-auto p-4">
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-          Error: {error}
+          Error: {error || actionError}
         </div>
         <button
           onClick={() => navigate("/project-technologies")}
@@ -94,6 +145,33 @@ export default function ProjectTechnologyDetails({
           >
             Edit
           </Button>
+
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="destructive">Delete</Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This action cannot be undone. This will permanently delete the
+                  technology and remove it from all associated projects.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <form method="post">
+                  <input type="hidden" name="action" value="delete" />
+                  <AlertDialogAction
+                    type="submit"
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  >
+                    Delete
+                  </AlertDialogAction>
+                </form>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </div>
 
