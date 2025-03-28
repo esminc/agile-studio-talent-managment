@@ -20,6 +20,10 @@ export default [
     route("project-technologies", "routes/project-technologies.tsx"),
     route("project-technologies/new", "routes/project-technologies/new.tsx"),
     route(
+      "project-technologies/:projectTechnologyId",
+      "routes/project-technologies/$projectTechnologyId/index.tsx",
+    ),
+    route(
       "project-technologies/:projectTechnologyId/edit",
       "routes/project-technologies/$projectTechnologyId/edit.tsx",
     ),
