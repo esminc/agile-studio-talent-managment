@@ -85,7 +85,7 @@ export default function ProjectTechnologies({
                 <TableCell className="font-medium">
                   <button
                     onClick={() =>
-                      navigate(`/project-technologies/${technology.id}/edit`)
+                      navigate(`/project-technologies/${technology.id}`)
                     }
                     className="hover:underline text-blue-600"
                   >
