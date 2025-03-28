@@ -10,15 +10,15 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "~/components/ui/alert-dialog";
+import { Form } from "react-router";
 
 interface ProjectTechnologyDeleteDialogProps {
   projectTechnologyId: string;
 }
 
-export function ProjectTechnologyDeleteDialog(
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  { projectTechnologyId }: ProjectTechnologyDeleteDialogProps,
-) {
+export function ProjectTechnologyDeleteDialog({
+  projectTechnologyId,
+}: ProjectTechnologyDeleteDialogProps) {
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
@@ -34,15 +34,20 @@ export function ProjectTechnologyDeleteDialog(
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <form method="post">
+          <Form method="post">
             <input type="hidden" name="action" value="delete" />
+            <input
+              type="hidden"
+              name="projectTechnologyId"
+              value={projectTechnologyId}
+            />
             <AlertDialogAction
               type="submit"
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               Delete
             </AlertDialogAction>
-          </form>
+          </Form>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
