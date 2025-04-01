@@ -72,9 +72,8 @@ export async function clientAction({ request }: { request: Request }) {
 
       try {
         const { data: existingTech } =
-          await client.models.ProjectTechnology.list({
-            filter: { name: { eq: record.name } },
-            limit: 1,
+          await client.models.ProjectTechnology.listProjectTechnologyByName({
+            name: record.name,
           });
 
         if (existingTech.length > 0) {

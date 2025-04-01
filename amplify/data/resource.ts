@@ -53,6 +53,7 @@ const schema = a
         description: a.string(),
         projects: a.hasMany("ProjectTechnologyLink", "technologyId"),
       })
+      .secondaryIndexes((index) => [index("name")])
       .authorization((allow) => [allow.authenticated()]),
 
     ProjectAssignment: a
