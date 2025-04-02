@@ -158,6 +158,7 @@ export default function ProjectTechnologies({
               { name: "name", required: true },
               { name: "description", required: false },
             ]}
+            maxProgressValue={100}
           />
           <Button onClick={() => navigate("/project-technologies/new")}>
             Add Project Technology
