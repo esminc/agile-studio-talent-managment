@@ -1,9 +1,9 @@
-import { useNavigate } from "react-router";
-import { useEffect } from "react";
+import { redirect, useNavigate } from "react-router";
 import { ProjectForm } from "~/components/project-form";
-import { client } from "~/lib/amplify-client";
+import { client } from "~/lib/amplify-ssr-client";
 import type { Route } from "./+types/edit";
 import { updateProjectTechnologyLinks } from "~/lib/project";
+import { runWithAmplifyServerContext } from "~/lib/amplifyServerUtils";
 
 export function meta() {
   return [
@@ -12,50 +12,57 @@ export function meta() {
   ];
 }
 
-export async function clientLoader({ params }: Route.ClientLoaderArgs) {
-  try {
-    const projectId = params.projectId;
-    const { data: project } = await client.models.Project.get(
-      {
-        id: projectId,
-      },
-      {
-        selectionSet: [
-          "id",
-          "name",
-          "clientName",
-          "overview",
-          "startDate",
-          "endDate",
-          "technologies.*",
-        ],
-      },
-    );
+export async function loader({ params, request }: Route.LoaderArgs) {
+  const responseHeaders = new Headers();
+  return runWithAmplifyServerContext({
+    serverContext: { request, responseHeaders },
+    operation: async (contextSpec) => {
+      try {
+        const projectId = params.projectId;
+        const { data: project } = await client.models.Project.get(
+          contextSpec,
+          {
+            id: projectId,
+          },
+          {
+            selectionSet: [
+              "id",
+              "name",
+              "clientName",
+              "overview",
+              "startDate",
+              "endDate",
+              "technologies.*",
+            ],
+          },
+        );
 
-    if (!project) {
-      return { error: "Project not found" };
-    }
+        if (!project) {
+          return { error: "Project not found" };
+        }
 
-    const { data: techData } = await client.models.ProjectTechnology.list({
-      selectionSet: ["id", "name"],
-    });
+        const { data: techData } = await client.models.ProjectTechnology.list(
+          contextSpec,
+          {
+            selectionSet: ["id", "name"],
+          },
+        );
 
-    return {
-      project,
-      technologies: techData,
-    };
-  } catch (err) {
-    console.error("Error fetching project:", err);
-    return {
-      error: err instanceof Error ? err.message : "Unknown error occurred",
-    };
-  }
+        return {
+          project,
+          technologies: techData,
+        };
+      } catch (err) {
+        console.error("Error fetching project:", err);
+        return {
+          error: err instanceof Error ? err.message : "Unknown error occurred",
+        };
+      }
+    },
+  });
 }
 
-export async function clientAction({
-  request,
-  params,
-}: Route.ClientActionArgs) {
+export async function action({ request, params }: Route.ActionArgs) {
   const formData = await request.formData();
   const projectId = params.projectId;
 
@@ -72,49 +79,60 @@ export async function clientAction({
     return { error: "All required fields must be filled out" };
   }
 
-  try {
-    const { data: updatedProject, errors } = await client.models.Project.update(
-      {
-        id: projectId,
-        name,
-        clientName,
-        overview,
-        startDate,
-        endDate: endDate || null,
-      },
-      {
-        selectionSet: [
-          "id",
-          "name",
-          "clientName",
-          "overview",
-          "startDate",
-          "endDate",
-          "technologies.*",
-        ],
-      },
-    );
+  const responseHeaders = new Headers();
+  return await runWithAmplifyServerContext({
+    serverContext: { request, responseHeaders },
+    operation: async (contextSpec) => {
+      try {
+        const { data: updatedProject, errors } =
+          await client.models.Project.update(
+            contextSpec,
+            {
+              id: projectId,
+              name,
+              clientName,
+              overview,
+              startDate,
+              endDate: endDate || null,
+            },
+            {
+              selectionSet: [
+                "id",
+                "name",
+                "clientName",
+                "overview",
+                "startDate",
+                "endDate",
+                "technologies.*",
+              ],
+            },
+          );
 
-    if (errors) {
-      return { error: errors.map((error) => error.message).join(", ") };
-    }
+        if (errors) {
+          return { error: errors.map((error) => error.message).join(", ") };
+        }
 
-    if (updatedProject) {
-      await updateProjectTechnologyLinks({
-        project: updatedProject,
-        projectTechnologyIds: techIds,
-      });
-    }
-    return {
-      project: updatedProject,
-      success: true,
-    };
-  } catch (err) {
-    console.error("Error updating project:", err);
-    return {
-      error: err instanceof Error ? err.message : "Unknown error occurred",
-    };
-  }
+        if (updatedProject) {
+          await updateProjectTechnologyLinks({
+            contextSpec,
+            project: updatedProject,
+            projectTechnologyIds: techIds,
+          });
+        }
+        if (!updatedProject) {
+          return { error: "Project not found" };
+        }
+        return redirect(`/projects/${updatedProject.id}`, {
+          headers: responseHeaders,
+        });
+      } catch (err) {
+        console.error("Error updating project:", err);
+        return {
+          error: err instanceof Error ? err.message : "Unknown error occurred",
+        };
+      }
+    },
+  });
 }
 
 export default function EditProject({
@@ -132,16 +150,9 @@ export default function EditProject({
     error: undefined,
   };
 
-  const { success, error: actionError } = actionData || {
-    success: false,
+  const { error: actionError } = actionData || {
     error: undefined,
   };
-
-  useEffect(() => {
-    if (success) {
-      navigate(`/projects/${project?.id}`);
-    }
-  }, [success, navigate, project]);
 
   if (loadError) {
     return (

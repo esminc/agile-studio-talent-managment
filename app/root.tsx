@@ -17,7 +17,7 @@ import { useEffect } from "react";
 import { ToasterProvider } from "~/components/toaster-provider";
 import config from "../amplify_outputs.json";
 
-Amplify.configure(config);
+Amplify.configure(config, { ssr: true });
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },

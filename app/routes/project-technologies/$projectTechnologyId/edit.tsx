@@ -1,7 +1,12 @@
-import { useNavigate } from "react-router";
-import { useEffect } from "react";
+import {
+  data,
+  isRouteErrorResponse,
+  redirect,
+  useNavigate,
+} from "react-router";
 import { ProjectTechnologyForm } from "~/components/project-technology-form";
-import { client } from "~/lib/amplify-client";
+import { client } from "~/lib/amplify-ssr-client";
+import { runWithAmplifyServerContext } from "~/lib/amplifyServerUtils";
 import type { Route } from "./+types/edit";
 
 export function meta() {
@@ -14,38 +19,64 @@ export function meta() {
   ];
 }
 
-export async function clientLoader({ params }: Route.ClientLoaderArgs) {
-  try {
-    const projectTechnologyId = params.projectTechnologyId;
-    const { data: projectTechnology } =
-      await client.models.ProjectTechnology.get(
-        {
-          id: projectTechnologyId,
-        },
-        {
-          selectionSet: ["id", "name", "description"],
-        },
-      );
+export async function loader({ params, request }: Route.LoaderArgs) {
+  const responseHeaders = new Headers();
+  return runWithAmplifyServerContext({
+    serverContext: { request, responseHeaders },
+    operation: async (contextSpec) => {
+      try {
+        const projectTechnologyId = params.projectTechnologyId;
+        const { data: projectTechnology, errors } =
+          await client.models.ProjectTechnology.get(
+            contextSpec,
+            {
+              id: projectTechnologyId,
+            },
+            {
+              selectionSet: ["id", "name", "description"],
+            },
+          );
 
-    if (!projectTechnology) {
-      return { error: "Project Technology not found" };
-    }
+        if (errors) {
+          throw data(
+            {
+              error: errors.map((error) => error.message).join(", "),
+            },
+            { headers: responseHeaders },
+          );
+        }
 
-    return {
-      projectTechnology,
-    };
-  } catch (err) {
-    console.error("Error fetching project technology:", err);
-    return {
-      error: err instanceof Error ? err.message : "Unknown error occurred",
-    };
-  }
+        if (!projectTechnology) {
+          throw data(
+            {
+              error: "Project Technology not found",
+            },
+            { headers: responseHeaders },
+          );
+        }
+
+        return data(
+          {
+            projectTechnology,
+          },
+          { headers: responseHeaders },
+        );
+      } catch (err) {
+        console.error("Error fetching project technology:", err);
+        throw data(
+          {
+            projectTechnology: null,
+            error:
+              err instanceof Error ? err.message : "Unknown error occurred",
+          },
+          { headers: responseHeaders },
+        );
+      }
+    },
+  });
 }
 
-export async function clientAction({
-  request,
-  params,
-}: Route.ClientActionArgs) {
+export async function action({ request, params }: Route.ActionArgs) {
   const formData = await request.formData();
   const projectTechnologyId = params.projectTechnologyId;
 
@@ -56,33 +87,49 @@ export async function clientAction({
     return { error: "Name is required" };
   }
 
-  try {
-    const { data: updatedProjectTechnology, errors } =
-      await client.models.ProjectTechnology.update(
-        {
-          id: projectTechnologyId,
-          name,
-          description,
-        },
-        {
-          selectionSet: ["id", "name", "description"],
-        },
-      );
+  const responseHeaders = new Headers();
+  return runWithAmplifyServerContext({
+    serverContext: { request, responseHeaders },
+    operation: async (contextSpec) => {
+      try {
+        const { errors } = await client.models.ProjectTechnology.update(
+          contextSpec,
+          {
+            id: projectTechnologyId,
+            name,
+            description,
+          },
+          {
+            selectionSet: ["id", "name", "description"],
+          },
+        );
 
-    if (errors) {
-      return { error: errors.map((error) => error.message).join(", ") };
-    }
+        if (errors) {
+          return data(
+            { error: errors.map((error) => error.message).join(", ") },
+            {
+              headers: responseHeaders,
+            },
+          );
+        }
 
-    return {
-      projectTechnology: updatedProjectTechnology,
-      success: true,
-    };
-  } catch (err) {
-    console.error("Error updating project technology:", err);
-    return {
-      error: err instanceof Error ? err.message : "Unknown error occurred",
-    };
-  }
+        return redirect("/project-technologies", {
+          headers: responseHeaders,
+        });
+      } catch (err) {
+        console.error("Error updating project technology:", err);
+        return data(
+          {
+            error:
+              err instanceof Error ? err.message : "Unknown error occurred",
+          },
+          {
+            headers: responseHeaders,
+          },
+        );
+      }
+    },
+  });
 }
 
 export default function EditProjectTechnology({
@@ -90,47 +137,11 @@ export default function EditProjectTechnology({
   actionData,
 }: Route.ComponentProps) {
   const navigate = useNavigate();
-  const { projectTechnology, error: loadError } = loaderData || {
-    projectTechnology: null,
+  const { projectTechnology } = loaderData;
+
+  const { error: actionError } = actionData || {
     error: undefined,
   };
-
-  const { success, error: actionError } = actionData || {
-    success: false,
-    error: undefined,
-  };
-
-  useEffect(() => {
-    if (success) {
-      navigate("/project-technologies");
-    }
-  }, [success, navigate]);
-
-  if (loadError) {
-    return (
-      <div className="container mx-auto p-4">
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-          Error: {loadError}
-        </div>
-        <button
-          onClick={() => navigate("/project-technologies")}
-          className="px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300"
-        >
-          Back to Project Technologies
-        </button>
-      </div>
-    );
-  }
-
-  if (!projectTechnology) {
-    return (
-      <div className="container mx-auto p-4">
-        <div className="text-center py-8">
-          <p className="text-gray-500">Loading project technology...</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="container mx-auto p-4">
@@ -151,4 +162,34 @@ export default function EditProjectTechnology({
       </div>
     </div>
   );
+}
+
+export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
+  const navigate = useNavigate();
+  if (isRouteErrorResponse(error)) {
+    return (
+      <div className="container mx-auto p-4">
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+          Error: {error.data.error}
+        </div>
+        <button
+          onClick={() => navigate("/project-technologies")}
+          className="px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300"
+        >
+          Back to Project Technologies
+        </button>
+      </div>
+    );
+  } else if (error instanceof Error) {
+    return (
+      <div>
+        <h1>Error</h1>
+        <p>{error.message}</p>
+        <p>The stack trace is:</p>
+        <pre>{error.stack}</pre>
+      </div>
+    );
+  } else {
+    return <h1>Unknown Error</h1>;
+  }
 }

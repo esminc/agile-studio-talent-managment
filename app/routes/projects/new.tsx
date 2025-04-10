@@ -1,10 +1,10 @@
 // No need to import React with modern JSX transform
-import { useNavigate } from "react-router";
-import { useEffect } from "react";
+import { data, redirect, useNavigate } from "react-router";
 import { ProjectForm } from "~/components/project-form";
-import { client } from "~/lib/amplify-client";
+import { client } from "~/lib/amplify-ssr-client";
 import type { Route } from "../projects/+types/new";
 import { updateProjectTechnologyLinks } from "~/lib/project";
+import { runWithAmplifyServerContext } from "~/lib/amplifyServerUtils";
 
 export function meta() {
   return [
@@ -13,16 +13,42 @@ export function meta() {
   ];
 }
 
-export async function clientLoader() {
-  const { data: techData } = await client.models.ProjectTechnology.list({
-    selectionSet: ["id", "name"],
+export async function loader({ request }: Route.LoaderArgs) {
+  const responseHeaders = new Headers();
+  return runWithAmplifyServerContext({
+    serverContext: { request, responseHeaders },
+    operation: async (contextSpec) => {
+      try {
+        const { data: techData } = await client.models.ProjectTechnology.list(
+          contextSpec,
+          {
+            selectionSet: ["id", "name"],
+          },
+        );
+        return data(
+          {
+            technologies: techData,
+          },
+          { headers: responseHeaders },
+        );
+      } catch (err) {
+        console.error("Error fetching project technologies:", err);
+        return data(
+          {
+            technologies: [],
+            error:
+              err instanceof Error ? err.message : "Unknown error occurred",
+          },
+          {
+            headers: responseHeaders,
+          },
+        );
+      }
+    },
   });
-  return {
-    technologies: techData,
-  };
 }
 
-export async function clientAction({ request }: Route.ClientActionArgs) {
+export async function action({ request }: Route.ActionArgs) {
   const formData = await request.formData();
 
   const name = formData.get("name") as string;
@@ -35,42 +61,62 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
   const techIds: string[] = selectedTechIds ? JSON.parse(selectedTechIds) : [];
 
   if (!name || !clientName || !overview || !startDate) {
-    return { error: "All fields are required" };
+    return { project: null, error: "All fields are required" };
   }
 
   // Create the project with the Amplify client
-  const { data, errors } = await client.models.Project.create(
-    {
-      name,
-      clientName,
-      overview,
-      startDate,
-      endDate: endDate || null,
+  const responseHeaders = new Headers();
+  return await runWithAmplifyServerContext({
+    serverContext: { request, responseHeaders },
+    operation: async (contextSpec) => {
+      try {
+        const { data: project, errors } = await client.models.Project.create(
+          contextSpec,
+          {
+            name,
+            clientName,
+            overview,
+            startDate,
+            endDate: endDate || null,
+          },
+          {
+            selectionSet: [
+              "id",
+              "name",
+              "clientName",
+              "overview",
+              "startDate",
+              "endDate",
+              "technologies.*",
+            ],
+          },
+        );
+        if (project) {
+          await updateProjectTechnologyLinks({
+            contextSpec,
+            project,
+            projectTechnologyIds: techIds,
+          });
+        }
+        if (errors) {
+          return data(
+            { error: errors?.map((error) => error.message)?.join(", ") },
+            { headers: responseHeaders },
+          );
+        }
+        // Redirect to the projects page after successful creation
+        return redirect("/projects", {
+          headers: responseHeaders,
+        });
+      } catch (err) {
+        console.error("Error creating project:", err);
+        return {
+          project: null,
+          error: err instanceof Error ? err.message : "Unknown error occurred",
+        };
+      }
     },
-    {
-      selectionSet: [
-        "id",
-        "name",
-        "clientName",
-        "overview",
-        "startDate",
-        "endDate",
-        "technologies.*",
-      ],
-    },
-  );
-
-  if (data) {
-    await updateProjectTechnologyLinks({
-      project: data,
-      projectTechnologyIds: techIds,
-    });
-  }
-
-  return {
-    project: data,
-    error: errors?.map((error) => error.message)?.join(", "),
-  };
+  });
 }
 
 export default function NewProject({
@@ -79,17 +125,10 @@ export default function NewProject({
 }: Route.ComponentProps) {
   const navigate = useNavigate();
   const { technologies } = loaderData;
-  const { project, error } = actionData || {
+  const { error } = actionData || {
     project: undefined,
     error: undefined,
   };
-
-  // If project was created successfully, navigate to projects list
-  useEffect(() => {
-    if (project && !error) {
-      navigate("/projects");
-    }
-  }, [project, error, navigate]);
 
   return (
     <div className="container mx-auto p-4">

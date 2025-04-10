@@ -8,9 +8,15 @@ import { MultiSelect } from "./ui/multi-select";
 export interface AccountFormProps {
   error?: Error | null;
   onCancel: () => void;
-  account?: Schema["Account"]["type"]; // 既存のアカウント情報（編集時）
-  projects?: Schema["Project"]["type"][]; // 利用可能なプロジェクトリスト
-  projectAssignments?: Schema["ProjectAssignment"]["type"][]; // 現在のプロジェクトアサインメント
+  account?: Pick<
+    Schema["Account"]["type"],
+    "id" | "name" | "email" | "photo" | "organizationLine" | "residence"
+  >; // 既存のアカウント情報（編集時）
+  projects?: Pick<Schema["Project"]["type"], "id" | "name">[]; // 利用可能なプロジェクトリスト
+  projectAssignments?: Pick<
+    Schema["ProjectAssignment"]["type"],
+    "projectId" | "startDate" | "endDate"
+  >[]; // 現在のプロジェクトアサインメント
 }
 
 export function AccountForm({
@@ -143,8 +149,11 @@ export function AccountForm({
 }
 
 interface ProjectAssignmentSelectorProps {
-  projects: Schema["Project"]["type"][];
-  initialAssignments: Schema["ProjectAssignment"]["type"][];
+  projects: Pick<Schema["Project"]["type"], "id" | "name">[];
+  initialAssignments: Pick<
+    Schema["ProjectAssignment"]["type"],
+    "projectId" | "startDate" | "endDate"
+  >[];
 }
 
 interface Assignment {

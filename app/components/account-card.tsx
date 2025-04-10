@@ -6,7 +6,10 @@ interface AccountCardProps {
   onClick?: () => void;
 }
 
-type Account = Schema["Account"]["type"];
+type Account = Pick<
+  Schema["Account"]["type"],
+  "id" | "name" | "photo" | "organizationLine" | "residence"
+>;
 
 export function AccountCard({ account, onClick }: AccountCardProps) {
   return (

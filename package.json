@@ -27,6 +27,7 @@
     "@react-router/express": "^7.1.5",
     "@react-router/node": "^7.1.5",
     "@react-router/serve": "^7.1.5",
+    "amplify-adapter-react-router": "^0.1.0",
     "aws-amplify": "^6.12.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

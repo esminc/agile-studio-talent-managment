@@ -1,8 +1,9 @@
 // No need to import React with modern JSX transform
-import { useNavigate } from "react-router";
-import { useEffect } from "react";
+import { data, redirect, useNavigate } from "react-router";
 import { ProjectTechnologyForm } from "../../components/project-technology-form";
-import { client } from "../../lib/amplify-client";
+import { client } from "~/lib/amplify-ssr-client";
+import { runWithAmplifyServerContext } from "~/lib/amplifyServerUtils";
+import type { Route } from "./+types/new";
 
 export function meta() {
   return [
@@ -14,7 +15,7 @@ export function meta() {
   ];
 }
 
-export async function clientAction({ request }: { request: Request }) {
+export async function action({ request }: Route.ActionArgs) {
   const formData = await request.formData();
 
   const name = formData.get("name") as string;
@@ -23,43 +24,42 @@ export async function clientAction({ request }: { request: Request }) {
   if (!name) {
     return { error: "Name is required" };
   }
-
-  // Create the project technology with the Amplify client
-  const { data, errors } = await client.models.ProjectTechnology.create({
-    name,
-    description,
+  const responseHeaders = new Headers();
+  return runWithAmplifyServerContext({
+    serverContext: { request, responseHeaders },
+    operation: async (contextSpec) => {
+      try {
+        // Create the project technology with the Amplify client
+        const { errors } = await client.models.ProjectTechnology.create(
+          contextSpec,
+          {
+            name,
+            description,
+          },
+        );
+        if (errors) {
+          return data(
+            { error: errors?.map((error) => error.message)?.join(", ") },
+            { headers: responseHeaders },
+          );
+        }
+        return redirect("/project-technologies", { headers: responseHeaders });
+      } catch (err) {
+        console.error("Error creating project technology:", err);
+        return {
+          //projectTechnology: undefined,
+          error: err instanceof Error ? err.message : "Unknown error occurred",
+        };
+      }
+    },
   });
-
-  return {
-    projectTechnology: data,
-    error: errors?.map((error) => error.message)?.join(", "),
-  };
-}
-
-import type { Schema } from "../../../amplify/data/resource";
-
-interface ActionData {
-  projectTechnology?: Schema["ProjectTechnology"]["type"];
-  error?: string;
 }
 
 export default function NewProjectTechnology({
   actionData,
-}: {
-  actionData: ActionData | undefined;
-}) {
+}: Route.ComponentProps) {
   const navigate = useNavigate();
-  const { projectTechnology, error } = actionData || {
-    projectTechnology: undefined,
-    error: undefined,
-  };
-
-  // If project technology was created successfully, navigate to project technologies list
-  useEffect(() => {
-    if (projectTechnology && !error) {
-      navigate("/project-technologies");
-    }
-  }, [projectTechnology, error, navigate]);
+  const { error } = actionData || {};
 
   return (
     <div className="container mx-auto p-4">

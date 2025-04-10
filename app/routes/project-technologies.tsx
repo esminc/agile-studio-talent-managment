@@ -1,7 +1,7 @@
 // No need to import React with modern JSX transform
 import { useNavigate } from "react-router";
 import { Button } from "../components/ui/button";
-import { client } from "../lib/amplify-client";
+import { client } from "../lib/amplify-ssr-client";
 import {
   Table,
   TableBody,
@@ -12,6 +12,7 @@ import {
   TableRow,
 } from "../components/ui/table";
 import type { Route } from "./+types/project-technologies";
+import { runWithAmplifyServerContext } from "~/lib/amplifyServerUtils";
 
 export function meta() {
   return [
@@ -23,19 +24,28 @@ export function meta() {
   ];
 }
 
-export async function clientLoader() {
-  try {
-    const { data } = await client.models.ProjectTechnology.list({
-      selectionSet: ["id", "name", "description", "projects.*"],
-    });
-    return { projectTechnologies: data };
-  } catch (err) {
-    console.error("Error fetching project technologies:", err);
-    return {
-      projectTechnologies: [],
-      error: err instanceof Error ? err.message : "Unknown error occurred",
-    };
-  }
+export async function loader({ request }: Route.LoaderArgs) {
+  const responseHeaders = new Headers();
+  return runWithAmplifyServerContext({
+    serverContext: { request, responseHeaders },
+    operation: async (contextSpec) => {
+      try {
+        const { data } = await client.models.ProjectTechnology.list(
+          contextSpec,
+          {
+            selectionSet: ["id", "name", "description", "projects.*"],
+          },
+        );
+        return { projectTechnologies: data };
+      } catch (err) {
+        console.error("Error fetching project technologies:", err);
+        return {
+          projectTechnologies: [],
+          error: err instanceof Error ? err.message : "Unknown error occurred",
+        };
+      }
+    },
+  });
 }
 
 export default function ProjectTechnologies({

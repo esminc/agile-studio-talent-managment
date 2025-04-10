@@ -1,7 +1,8 @@
-import { useNavigate } from "react-router";
-import { client } from "~/lib/amplify-client";
+import { data, isRouteErrorResponse, useNavigate } from "react-router";
+import { client } from "~/lib/amplify-ssr-client";
 import { Button } from "~/components/ui/button";
 import type { Route } from "./+types/index";
+import { runWithAmplifyServerContext } from "~/lib/amplifyServerUtils";
 
 export function meta() {
   return [
@@ -10,76 +11,56 @@ export function meta() {
   ];
 }
 
-export async function clientLoader({ params }: Route.ClientLoaderArgs) {
-  try {
-    const accountId = params.accountId;
-    const { data: account } = await client.models.Account.get(
-      {
-        id: accountId,
-      },
-      {
-        selectionSet: [
-          "id",
-          "name",
-          "email",
-          "photo",
-          "organizationLine",
-          "residence",
-          "assignments.id",
-          "assignments.projectId",
-          "assignments.startDate",
-          "assignments.endDate",
-          "assignments.project.id",
-          "assignments.project.name",
-          "assignments.project.clientName",
-        ],
-      },
-    );
+export async function loader({ params, request }: Route.LoaderArgs) {
+  const responseHeaders = new Headers();
+  return runWithAmplifyServerContext({
+    serverContext: { request, responseHeaders },
+    operation: async (contextSpec) => {
+      const accountId = params.accountId;
+      const { data: account } = await client.models.Account.get(
+        contextSpec,
+        {
+          id: accountId,
+        },
+        {
+          selectionSet: [
+            "id",
+            "name",
+            "email",
+            "photo",
+            "organizationLine",
+            "residence",
+            "assignments.id",
+            "assignments.projectId",
+            "assignments.startDate",
+            "assignments.endDate",
+            "assignments.project.id",
+            "assignments.project.name",
+            "assignments.project.clientName",
+          ],
+        },
+      );
 
-    if (!account) {
-      return { error: "Account not found" };
-    }
+      if (!account) {
+        throw data(
+          { error: "Account not found" },
+          { status: 404, headers: responseHeaders },
+        );
+      }
 
-    return {
-      account,
-    };
-  } catch (err) {
-    console.error("Error fetching account:", err);
-    return {
-      error: err instanceof Error ? err.message : "Unknown error occurred",
-    };
-  }
+      return data(
+        {
+          account,
+        },
+        { headers: responseHeaders },
+      );
+    },
+  });
 }
 
 export default function AccountDetails({ loaderData }: Route.ComponentProps) {
-  const { account, error } = loaderData || {
-    account: null,
-    error: undefined,
-  };
+  const { account } = loaderData;
   const navigate = useNavigate();
-
-  if (error) {
-    return (
-      <div className="container mx-auto p-4">
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-          Error: {error}
-        </div>
-        <Button onClick={() => navigate("/accounts")} variant="outline">
-          アカウント一覧に戻る
-        </Button>
-      </div>
-    );
-  }
-
-  if (!account) {
-    return (
-      <div className="container mx-auto p-4">
-        <div className="text-center py-8">
-          <p className="text-gray-500">Loading account...</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="container mx-auto p-4">
@@ -171,4 +152,34 @@ export default function AccountDetails({ loaderData }: Route.ComponentProps) {
       )}
     </div>
   );
+}
+
+export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
+  const navigate = useNavigate();
+  if (isRouteErrorResponse(error)) {
+    return (
+      <div className="container mx-auto p-4">
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+          Error: {error.data.error}
+        </div>
+        <button
+          onClick={() => navigate("/accounts")}
+          className="px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300"
+        >
+          アカウント一覧に戻る
+        </button>
+      </div>
+    );
+  } else if (error instanceof Error) {
+    return (
+      <div>
+        <h1>Error</h1>
+        <p>{error.message}</p>
+        <p>The stack trace is:</p>
+        <pre>{error.stack}</pre>
+      </div>
+    );
+  } else {
+    return <h1>Unknown Error</h1>;
+  }
 }
