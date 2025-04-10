@@ -1,11 +1,12 @@
 // No need to import React with modern JSX transform
 import { Button } from "../components/ui/button";
 import { AccountCard } from "../components/account-card";
-import { client } from "../lib/amplify-client";
+import { client } from "../lib/amplify-ssr-client";
 import { useNavigate } from "react-router";
 import { parse } from "csv-parse/browser/esm";
 import { CSVImportDialog } from "../components/csv-import-dialog";
 import type { Route } from "./+types/accounts";
+import { runWithAmplifyServerContext } from "~/lib/amplifyServerUtils";
 
 export function meta() {
   return [
@@ -14,7 +15,7 @@ export function meta() {
   ];
 }
 
-export async function clientAction({ request }: { request: Request }) {
+export async function action({ request }: { request: Request }) {
   const formData = await request.formData();
   const csvFile = formData.get("csvFile") as File;
 
@@ -66,27 +67,33 @@ export async function clientAction({ request }: { request: Request }) {
         continue;
       }
 
-      try {
-        const { errors } = await client.models.Account.create({
-          name: record.name,
-          email: record.email,
-          photo: record.photo || undefined,
-          organizationLine: record.organizationLine,
-          residence: record.residence,
-        });
+      const responseHeaders = new Headers();
+      await runWithAmplifyServerContext({
+        serverContext: { request, responseHeaders },
+        operation: async (contextSpec) => {
+          try {
+            const { errors } = await client.models.Account.create(contextSpec, {
+              name: record.name,
+              email: record.email,
+              photo: record.photo || undefined,
+              organizationLine: record.organizationLine,
+              residence: record.residence,
+            });
 
-        if (errors) {
-          results.errors.push(
-            `行 ${i + 1}: ${errors.map((err) => err.message).join(", ")}`,
-          );
-        } else {
-          results.success++;
-        }
-      } catch (error) {
-        results.errors.push(
-          `行 ${i + 1}: ${error instanceof Error ? error.message : "不明なエラー"}`,
-        );
-      }
+            if (errors) {
+              results.errors.push(
+                `行 ${i + 1}: ${errors.map((err) => err.message).join(", ")}`,
+              );
+            } else {
+              results.success++;
+            }
+          } catch (error) {
+            results.errors.push(
+              `行 ${i + 1}: ${error instanceof Error ? error.message : "不明なエラー"}`,
+            );
+          }
+        },
+      });
     }
 
     return {
@@ -99,17 +106,23 @@ export async function clientAction({ request }: { request: Request }) {
   }
 }
 
-export async function clientLoader() {
-  try {
-    const { data } = await client.models.Account.list();
-    return { accounts: data };
-  } catch (err) {
-    console.error("Error fetching accounts:", err);
-    return {
-      accounts: [],
-      error: err instanceof Error ? err.message : "Unknown error occurred",
-    };
-  }
+export async function loader({ request }: Route.LoaderArgs) {
+  const responseHeaders = new Headers();
+  return runWithAmplifyServerContext({
+    serverContext: { request, responseHeaders },
+    operation: async (contextSpec) => {
+      try {
+        const { data } = await client.models.Account.list(contextSpec);
+        return { accounts: data };
+      } catch (err) {
+        console.error("Error fetching accounts:", err);
+        return {
+          accounts: [],
+          error: err instanceof Error ? err.message : "Unknown error occurred",
+        };
+      }
+    },
+  });
 }
 
 export default function Accounts({

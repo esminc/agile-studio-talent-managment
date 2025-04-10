@@ -1,8 +1,7 @@
 // No need to import React with modern JSX transform
-import { useNavigate } from "react-router";
-import type { Schema } from "../../amplify/data/resource";
+import { data, useNavigate } from "react-router";
 import { Button } from "~/components/ui/button";
-import { client } from "~/lib/amplify-client";
+import { client } from "~/lib/amplify-ssr-client";
 import {
   Table,
   TableBody,
@@ -13,6 +12,7 @@ import {
   TableRow,
 } from "~/components/ui/table";
 import type { Route } from "./+types/projects";
+import { runWithAmplifyServerContext } from "~/lib/amplifyServerUtils";
 
 export function meta() {
   return [
@@ -21,19 +21,21 @@ export function meta() {
   ];
 }
 
-type Project = Schema["Project"]["type"];
-
-export async function clientLoader() {
-  try {
-    const { data } = await client.models.Project.list();
-    return { projects: data };
-  } catch (err) {
-    console.error("Error fetching projects:", err);
-    return {
-      projects: [],
-      error: err instanceof Error ? err.message : "Unknown error occurred",
-    };
-  }
+export async function loader({ request }: Route.LoaderArgs) {
+  const responseHeaders = new Headers();
+  const { data: projects, errors } = await runWithAmplifyServerContext({
+    serverContext: { request, responseHeaders },
+    operation: (contextSpec) => client.models.Project.list(contextSpec),
+  });
+  return data(
+    {
+      projects,
+      error: errors?.map((e) => e.message).join(", "),
+    },
+    {
+      headers: responseHeaders,
+    },
+  );
 }
 
 export default function Projects({ loaderData }: Route.ComponentProps) {
@@ -79,7 +81,7 @@ export default function Projects({ loaderData }: Route.ComponentProps) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {projects.map((project: Project) => (
+            {projects.map((project) => (
               <TableRow key={project.id}>
                 <TableCell className="font-medium">
                   <a

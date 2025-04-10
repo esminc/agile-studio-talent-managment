@@ -1,10 +1,13 @@
 import type { Schema } from "amplify/data/resource";
-import { client } from "./amplify-client";
+import { client } from "./amplify-ssr-client";
+import type { AmplifyServer } from "aws-amplify/adapter-core";
 
 export async function updateProjectTechnologyLinks({
+  contextSpec,
   project,
   projectTechnologyIds,
 }: {
+  contextSpec: AmplifyServer.ContextSpec;
   project: Pick<Schema["Project"]["type"], "id"> & {
     technologies: Pick<
       Schema["ProjectTechnologyLink"]["type"],
@@ -21,7 +24,7 @@ export async function updateProjectTechnologyLinks({
       (link) => !projectTechnologyIds.includes(link.technologyId),
     ) ?? [];
   for (const linkToRemove of linksToRemove) {
-    await client.models.ProjectTechnologyLink.delete({
+    await client.models.ProjectTechnologyLink.delete(contextSpec, {
       id: linkToRemove.id,
     });
   }
@@ -30,7 +33,7 @@ export async function updateProjectTechnologyLinks({
     (id) => !currentTechIds.includes(id),
   );
   for (const techId of techToAdd) {
-    await client.models.ProjectTechnologyLink.create({
+    await client.models.ProjectTechnologyLink.create(contextSpec, {
       projectId: project.id,
       technologyId: techId,
     });

@@ -1,6 +1,6 @@
 import { redirect, useFetcher, useNavigate } from "react-router";
 import { useState, useEffect } from "react";
-import { client } from "~/lib/amplify-client";
+import { client } from "~/lib/amplify-ssr-client";
 import { Button } from "~/components/ui/button";
 import { Badge } from "~/components/ui/badge";
 import {
@@ -14,6 +14,7 @@ import {
 import { useToast } from "~/components/ui/use-toast";
 import type { Route } from "./+types/index";
 import type { Schema } from "amplify/data/resource";
+import { runWithAmplifyServerContext } from "~/lib/amplifyServerUtils";
 
 type ProjectTechnology = Pick<
   Schema["ProjectTechnology"]["type"],
@@ -27,106 +28,123 @@ export function meta() {
   ];
 }
 
-export async function clientLoader({ params }: Route.ClientLoaderArgs) {
-  try {
-    const projectId = params.projectId;
+export async function loader({ params, request }: Route.LoaderArgs) {
+  const responseHeaders = new Headers();
+  return runWithAmplifyServerContext({
+    serverContext: { request, responseHeaders },
+    operation: async (contextSpec) => {
+      try {
+        const projectId = params.projectId;
 
-    const { data: project } = await client.models.Project.get(
-      {
-        id: projectId,
-      },
-      {
-        selectionSet: [
-          "id",
-          "name",
-          "clientName",
-          "overview",
-          "startDate",
-          "endDate",
-          "technologies.*",
-          "assignments.id",
-          "assignments.accountId",
-          "assignments.startDate",
-          "assignments.endDate",
-          "assignments.account.id",
-          "assignments.account.name",
-          "assignments.account.email",
-          "assignments.account.photo",
-          "assignments.account.organizationLine",
-          "assignments.account.residence",
-        ],
-      },
-    );
+        const { data: project } = await client.models.Project.get(
+          contextSpec,
+          {
+            id: projectId,
+          },
+          {
+            selectionSet: [
+              "id",
+              "name",
+              "clientName",
+              "overview",
+              "startDate",
+              "endDate",
+              "technologies.*",
+              "assignments.id",
+              "assignments.accountId",
+              "assignments.startDate",
+              "assignments.endDate",
+              "assignments.account.id",
+              "assignments.account.name",
+              "assignments.account.email",
+              "assignments.account.photo",
+              "assignments.account.organizationLine",
+              "assignments.account.residence",
+            ],
+          },
+        );
 
-    if (!project) {
-      return { error: "Project not found" };
-    }
+        if (!project) {
+          return { error: "Project not found" };
+        }
 
-    const techIds = project.technologies.map((tech) => tech.technologyId);
-    let technologies: ProjectTechnology[] = [];
+        const techIds = project.technologies.map((tech) => tech.technologyId);
+        let technologies: ProjectTechnology[] = [];
 
-    if (techIds.length > 0) {
-      const { data: techData } = await client.models.ProjectTechnology.list({
-        filter: { or: techIds.map((techId) => ({ id: { eq: techId } })) },
-        selectionSet: ["id", "name"],
-      });
-      technologies = techData;
-    }
+        if (techIds.length > 0) {
+          const { data: techData } = await client.models.ProjectTechnology.list(
+            contextSpec,
+            {
+              filter: { or: techIds.map((techId) => ({ id: { eq: techId } })) },
+              selectionSet: ["id", "name"],
+            },
+          );
+          technologies = techData;
+        }
 
-    return {
-      project,
-      technologies,
-    };
-  } catch (err) {
-    console.error("Error fetching project:", err);
-    return {
-      error: err instanceof Error ? err.message : "Unknown error occurred",
-    };
-  }
+        return {
+          project,
+          technologies,
+        };
+      } catch (err) {
+        console.error("Error fetching project:", err);
+        return {
+          error: err instanceof Error ? err.message : "Unknown error occurred",
+        };
+      }
+    },
+  });
 }
 
-export async function clientAction({ params }: Route.ClientActionArgs) {
-  try {
-    const projectId = params.projectId;
+export async function action({ params, request }: Route.ActionArgs) {
+  const responseHeaders = new Headers();
+  return runWithAmplifyServerContext({
+    serverContext: { request, responseHeaders },
+    operation: async (contextSpec) => {
+      try {
+        const projectId = params.projectId;
 
-    const { data: project } = await client.models.Project.get(
-      {
-        id: projectId,
-      },
-      {
-        selectionSet: ["id", "technologies.*", "assignments.*"],
-      },
-    );
+        const { data: project } = await client.models.Project.get(
+          contextSpec,
+          {
+            id: projectId,
+          },
+          {
+            selectionSet: ["id", "technologies.*", "assignments.*"],
+          },
+        );
 
-    if (!project) {
-      return { error: "Project not found" };
-    }
+        if (!project) {
+          return { error: "Project not found" };
+        }
 
-    if (project.assignments && project.assignments.length > 0) {
-      for (const assignment of project.assignments) {
-        await client.models.ProjectAssignment.delete({
-          id: assignment.id,
+        if (project.assignments && project.assignments.length > 0) {
+          for (const assignment of project.assignments) {
+            await client.models.ProjectAssignment.delete(contextSpec, {
+              id: assignment.id,
+            });
+          }
+        }
+
+        for (const techLink of project.technologies) {
+          await client.models.ProjectTechnologyLink.delete(contextSpec, {
+            id: techLink.id,
+          });
+        }
+
+        await client.models.Project.delete(contextSpec, {
+          id: projectId,
         });
+
+        return redirect("/projects");
+      } catch (err) {
+        console.error("Error deleting project:", err);
+        return {
+          error: err instanceof Error ? err.message : "Unknown error occurred",
+        };
       }
     }
-
-    for (const techLink of project.technologies) {
-      await client.models.ProjectTechnologyLink.delete({
-        id: techLink.id,
-      });
-    }
-
-    await client.models.Project.delete({
-      id: projectId,
-    });
-
-    return redirect("/projects");
-  } catch (err) {
-    console.error("Error deleting project:", err);
-    return {
-      error: err instanceof Error ? err.message : "Unknown error occurred",
-    };
-  }
+  });
 }
 
 export default function ProjectDetails({

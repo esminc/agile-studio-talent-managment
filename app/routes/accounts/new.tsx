@@ -1,9 +1,9 @@
 // No need to import React with modern JSX transform
-import { useNavigate } from "react-router";
-import { useEffect } from "react";
+import { data, redirect, useNavigate } from "react-router";
 import { AccountForm } from "../../components/account-form";
 import type { Route } from "./+types/new";
-import { client } from "../../lib/amplify-client";
+import { client } from "../../lib/amplify-ssr-client";
+import { runWithAmplifyServerContext } from "~/lib/amplifyServerUtils";
 
 export function meta() {
   return [
@@ -12,7 +12,7 @@ export function meta() {
   ];
 }
 
-export async function clientAction({ request }: Route.ClientActionArgs) {
+export async function action({ request }: Route.ActionArgs) {
   const formData = await request.formData();
 
   const name = formData.get("name") as string;
@@ -22,37 +22,42 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
   const residence = formData.get("residence") as string;
 
   if (!name || !organizationLine || !residence) {
-    return { error: "Name, Organization Line, and Residence are required" };
+    return data({
+      account: null,
+      error: "Name, Organization Line, and Residence are required",
+    });
   }
 
-  // Create the account with the Amplify client
-  const { data, errors } = await client.models.Account.create({
-    name,
-    email,
-    photo: photo || undefined,
-    organizationLine,
-    residence,
+  const responseHeaders = new Headers();
+  return runWithAmplifyServerContext({
+    serverContext: { request, responseHeaders },
+    operation: async (contextSpec) => {
+      // Create the account with the Amplify client
+      const { errors } = await client.models.Account.create(contextSpec, {
+        name,
+        email,
+        photo: photo || undefined,
+        organizationLine,
+        residence,
+      });
+      if (errors) {
+        return {
+          account: null,
+          error: errors?.map((error) => error.message)?.join(", "),
+        };
+      }
+      return redirect("/accounts", {
+        headers: responseHeaders,
+      });
+    },
   });
-
-  return {
-    account: data,
-    error: errors?.map((err) => err.message)?.join(", "),
-  };
 }
 
 export default function NewAccount({ actionData }: Route.ComponentProps) {
   const navigate = useNavigate();
-  const { account, error } = actionData || {
-    account: undefined,
+  const { error } = actionData || {
     error: undefined,
   };
-
-  // If account was created successfully, navigate to accounts list
-  useEffect(() => {
-    if (account && !error) {
-      navigate("/accounts");
-    }
-  }, [account, error, navigate]);
 
   return (
     <div className="container mx-auto p-4">

@@ -1,10 +1,13 @@
+import type { AmplifyServer } from "aws-amplify/adapter-core";
 import type { Schema } from "../../amplify/data/resource";
-import { client } from "./amplify-client";
+import { client } from "./amplify-ssr-client";
 
 export async function updateProjectAssignments({
+  contextSpec,
   account,
   projectAssignments,
 }: {
+  contextSpec: AmplifyServer.ContextSpec;
   account: Pick<Schema["Account"]["type"], "id"> & {
     assignments?:
       | Pick<
@@ -27,7 +30,7 @@ export async function updateProjectAssignments({
   );
 
   for (const assignmentToRemove of assignmentsToRemove) {
-    await client.models.ProjectAssignment.delete({
+    await client.models.ProjectAssignment.delete(contextSpec, {
       id: assignmentToRemove.id,
     });
   }
@@ -46,14 +49,14 @@ export async function updateProjectAssignments({
         existingAssignment.startDate !== pa.startDate ||
         existingAssignment.endDate !== pa.endDate
       ) {
-        await client.models.ProjectAssignment.update({
+        await client.models.ProjectAssignment.update(contextSpec, {
           id: existingAssignment.id,
           startDate: pa.startDate,
           endDate: pa.endDate || undefined,
         });
       }
     } else {
-      await client.models.ProjectAssignment.create({
+      await client.models.ProjectAssignment.create(contextSpec, {
         accountId: account.id,
         projectId: pa.projectId,
         startDate: pa.startDate,
