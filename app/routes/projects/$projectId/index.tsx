@@ -143,7 +143,7 @@ export async function action({ params, request }: Route.ActionArgs) {
           error: err instanceof Error ? err.message : "Unknown error occurred",
         };
       }
-    }
+    },
   });
 }
 
