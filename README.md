@@ -1,100 +1,54 @@
-# Welcome to React Router!
+# Agile Studio Talent Management System
 
-A modern, production-ready template for building full-stack React applications using React Router.
+このプロジェクトは Agile Studio のタレントマネジメントシステムです。
 
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/remix-run/react-router-templates/tree/main/default)
+## プロジェクト概要
 
-## Features
+Agile Studio のメンバーのスキルや経験、プロジェクトアサイン状況などを管理するためのシステムです。React Router と AWS Amplify を使用して構築されています。
 
-- 🚀 Server-side rendering
-- ⚡️ Hot Module Replacement (HMR)
-- 📦 Asset bundling and optimization
-- 🔄 Data loading and mutations
-- 🔒 TypeScript by default
-- 🎉 TailwindCSS for styling
-- 📖 [React Router docs](https://reactrouter.com/)
+## 開発環境セットアップ
 
-## Getting Started
+### 1. 依存関係のインストール
 
-### Installation
-
-Install the dependencies:
+プロジェクトのルートディレクトリで以下のコマンドを実行し、必要なパッケージをインストールします。
 
 ```bash
 npm install
 ```
 
-### Development
+### 2. 開発サーバーの起動
 
-Start the development server with HMR:
+以下のコマンドで開発サーバーを起動します。ホットリロードが有効になります。
 
 ```bash
 npm run dev
 ```
 
-Your application will be available at `http://localhost:5173`.
+アプリケーションは `http://localhost:5173` で利用可能になります。
 
-## Building for Production
+## ビルド
 
-Create a production build:
+本番用のビルドを作成するには、以下のコマンドを実行します。
 
 ```bash
 npm run build
 ```
 
-## Deployment
+ビルド成果物は `build/` ディレクトリに出力されますが、Amplify Hosting でのデプロイ時には `amplify.yml` の設定に基づいて自動的にビルドが行われます。
 
-### Docker Deployment
+## デプロイ (AWS Amplify Hosting)
 
-This template includes three Dockerfiles optimized for different package managers:
+このプロジェクトは AWS Amplify Hosting でのデプロイが推奨されます。
 
-- `Dockerfile` - for npm
-- `Dockerfile.pnpm` - for pnpm
-- `Dockerfile.bun` - for bun
+1.  **AWS Amplify Console にアクセス:** AWS マネジメントコンソールから Amplify Console を開きます。
+2.  **新しいアプリを作成:** 「ウェブアプリをホスト」を選択し、アプリ作成プロセスを開始します。
+3.  **リポジトリを接続:** このプロジェクトのリポジトリ（例: GitHub, GitLab, Bitbucket）を Amplify に接続します。
+4.  **ブランチを選択:** デプロイしたいブランチを選択します。
+5.  **ビルド設定の確認:** Amplify はリポジトリ内の `amplify.yml` を自動的に検出し、ビルド設定を構成します。通常、追加の設定は不要です。
+6.  **デプロイ:** 設定を確認し、デプロイを開始します。
 
-To build and run using Docker:
-
-```bash
-# For npm
-docker build -t my-app .
-
-# For pnpm
-docker build -f Dockerfile.pnpm -t my-app .
-
-# For bun
-docker build -f Dockerfile.bun -t my-app .
-
-# Run the container
-docker run -p 3000:3000 my-app
-```
-
-The containerized application can be deployed to any platform that supports Docker, including:
-
-- AWS ECS
-- Google Cloud Run
-- Azure Container Apps
-- Digital Ocean App Platform
-- Fly.io
-- Railway
-
-### DIY Deployment
-
-If you're familiar with deploying Node applications, the built-in app server is production-ready.
-
-Make sure to deploy the output of `npm run build`
-
-```
-├── package.json
-├── package-lock.json (or pnpm-lock.yaml, or bun.lockb)
-├── build/
-│   ├── client/    # Static assets
-│   └── server/    # Server-side code
-```
-
-## Styling
-
-This template comes with [Tailwind CSS](https://tailwindcss.com/) already configured for a simple default starting experience. You can use whatever CSS framework you prefer.
+デプロイが完了すると、Amplify によって提供される URL でアプリケーションにアクセスできるようになります。CI/CD パイプラインも自動的に設定され、選択したブランチへのプッシュをトリガーに自動でビルドとデプロイが実行されます。
 
 ---
 
-Built with ❤️ using React Router.
+Built with ❤️ using React Router and AWS Amplify.
