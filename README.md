@@ -1,6 +1,8 @@
 # Agile Studio Talent Management System
 
-このプロジェクトは Agile Studio のタレントマネジメントシステムです。
+Devinを導入して作成したWebアプリケーション（Agile Studio のタレントマネジメントシステム）のリポジトリです。
+
+[AIプログラマー「Devin」と挑む新たな開発の可能性 ～ アジャイル開発との親和性](https://www.agile-studio.jp/post/challenge-new-development-with-devin) で紹介しています。
 
 ## プロジェクト概要
 
